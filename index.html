@@ -1,0 +1,215 @@
+<html>
+<head>
+<title>MapMaker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Bootstrap -->
+<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+<script src="js/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="js/raphael-min.js"></script>
+
+<script language='javascript'>
+/* behaviour:
+if mouse is double-clicked in map: make a circle, 
+- when moouse moves from click, make a line
+- with each click, drop a new circle, with line ending at that circle, and starting a new line
+- unless a circle is already there. in which case, connect the line to the existing circle, and keep going
+- stop this mode when mouse is double-clicked.
+-- if double-clicked on a circle, end line on that circle
+-- if double-clicked in empty space, destroy that last line.
+- drag on circle to move it. 
+- click on circle to select
+-- 'd' deletes selected circle, and all connected lines
+- click on line to select it
+-- 'd' deletes selected line
+
+
+*/
+$( document ).ready(function() {
+  	var paper = Raphael("mapelem", 400, 600);
+
+  	var imageurl = "floor-plan_s.jpg";
+
+	var papermapimage = paper.image(imageurl, 0,0, 400, 600);
+
+  	
+	var mode = "circlecreating"; // linedrawing , circledragging, circlecreating
+
+	var currentCircle = false;
+	var currentLine = false;
+
+
+	var graph = 
+
+
+	$("#dump").click(function(){
+		console.log("dumping");
+		paper.forEach(function(elem){
+			console.log(elem);
+			if(elem.type == "circle"){
+
+			}else if(elem.type == "path"){
+				
+			}
+		});
+	});
+
+	papermapimage.dblclick(function(evt){
+	    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
+	    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
+		console.log("image dblclick");
+		if(mode == "circlecreating"){
+			// start drawing mode
+			mode = "linedrawing";
+			var circle = createCircle(x,y);
+			startLine(circle);
+		}else if(mode == "linedrawing"){
+			console.log("ending linedrwaing");
+			var circle = createCircle(x,y);
+			endLine(circle);
+			// end linedrawing mode, go back to circlecreating mode 
+			mode = "circlecreating";
+		}
+
+	});	
+
+	papermapimage.click(function (evt){
+	    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
+	    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
+
+	    if(mode == "linedrawing"){
+	    	// create new circle, end line at new circle, start new line at circle
+	    	circle = createCircle(x,y);
+	    	endLine(circle);
+	    	startLine(circle);
+		}
+	});
+
+	papermapimage.mousemove(function (evt){
+		if(mode == "linedrawing"){
+		    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
+		    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
+
+		    var sx = currentLine.attrs.path[0][1];
+		    var sy = currentLine.attrs.path[0][2];
+
+		    currentLine.attr("path", [["M",sx,sy],["L",x,y]]);
+
+		}
+	});
+
+
+
+	function createCircle(x, y){
+		// make a circle
+		console.log("clicked at " + x + " , " + y);
+
+		var circle = paper.circle(x,y, 5);
+
+		currentCircle = circle;
+
+		circle.data("lines", []);
+
+		circle.attr("stroke","#f00");
+		circle.attr("stroke-width",1);
+		circle.attr("fill", "#5f5");
+		circle.attr("fill-opacity",".2");
+		circle.click(function(evt2){
+			// click to select circle
+
+			if(mode == "linedrawing"){
+				endLine(this);
+				currentCircle = this;
+				startLine(this);
+			}
+			console.log("circleclicked");
+			selectedCircle = this;
+			currenLine = false;
+		});
+		circle.dblclick(function(evt3){
+			// dblclick to start drawing mode.
+
+			if(mode == "linedrawing" && this == currentCircle){
+				// end drawing mode, destroy current line
+				destroyLine(currentLine);
+				mode = "circlecreating";
+			}else{
+				console.log("circledblclicked");
+				mode = "linedrawing";
+				currentCircle = this;
+				startLine(currentCircle);
+			}
+
+		});
+		return circle;
+
+	}
+
+
+	function startLine(circle){
+		// start current line at current circle
+		console.log("starting Line");
+		console.log(currentCircle);
+		var sx = circle.attrs.cx;
+		var sy = circle.attrs.cy;
+		
+		var pathString = "M"+sx+","+sy+"L"+sx+","+sy;
+
+		console.log("creating " + pathString);
+		currentLine = paper.path(pathString);
+		currentLine.data("startCircle", circle);
+
+		currentLine.dblclick(function(evt){
+			console.log("path doubleclicked");
+		});
+
+	}
+
+	function endLine(circle){
+		// end current line at current circle
+		console.log("ending Line");
+		console.log(currentLine);
+
+		var sx = circle.attrs.cx ;
+		var sy = circle.attrs.cy ;
+
+		currentLine.data("endCircle", circle);
+		circle.data("lines", circle.data("lines").push(currentLine));
+
+		currentLine = false;
+
+	}
+
+	function destroyLine(line){
+		line.remove();
+	}
+
+});
+
+</script>
+
+</head>		
+<body>
+
+
+	<div class="container">
+		<div class="row-fluid-banner">
+			<div class="span6" align="left"><h1>PathFinder MapMaker (<span id="dump">Dump Data</span>)</h1></div>
+		</div>
+
+		<div class="row-fluid-banner" >
+			<div class="span6" id="mapelem"  width="400" height="600" ></div>
+			<div class="span4" id="mapmetadata">
+				<div id="debug"></div>
+			</div>
+		</div>
+
+		<div class="row-fluid-banner" >
+			<div class="span12" id="summarydata"></div>
+		</div>
+
+	</div>
+
+
+
+</body>
+</html>
