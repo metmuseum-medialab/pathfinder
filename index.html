@@ -35,20 +35,27 @@ $( document ).ready(function() {
 	var mode = "circlecreating"; // linedrawing , circledragging, circlecreating
 
 	var currentCircle = false;
+	var selectedCircle = false;
 	var currentLine = false;
-
-
-	var graph = 
 
 
 	$("#dump").click(function(){
 		console.log("dumping");
+		var data = {nodes : {}, edges : {}};
 		paper.forEach(function(elem){
 			console.log(elem);
 			if(elem.type == "circle"){
-
+				var x = elem.attr("cx");
+				var y = elem.attr("cy");
+				var name = x + "_" + y;				
+				console.log("circle " + name);
 			}else if(elem.type == "path"){
-				
+				var sx = elem.data("startCircle").attr("cx");
+				var sy = elem.data("startCircle").attr("cy");
+				var ex = elem.data("endCircle").attr("cx");
+				var ey = elem.data("endCircle").attr("cy");
+				var name = sx+"_"+sy+":"+ex +"_"+ey;
+				console.log("path " + name);
 			}
 		});
 	});
@@ -60,10 +67,12 @@ $( document ).ready(function() {
 		if(mode == "circlecreating"){
 			// start drawing mode
 			mode = "linedrawing";
+			unsetSelectedCircle();
 			var circle = createCircle(x,y);
 			startLine(circle);
 		}else if(mode == "linedrawing"){
-			console.log("ending linedrwaing");
+			unsetSelectedCircle();
+			console.log("ending linedrawing");
 			var circle = createCircle(x,y);
 			endLine(circle);
 			// end linedrawing mode, go back to circlecreating mode 
@@ -82,6 +91,17 @@ $( document ).ready(function() {
 	    	endLine(circle);
 	    	startLine(circle);
 		}
+	});
+
+
+	$(window).keypress(function (evt){
+
+    	console.log("keypressed");
+      	console.log(evt);
+       	if(evt.charCode == 100 && selectedCircle){ // 'd' is pressed
+       		destroyCircle(selectedCircle);
+       	}
+
 	});
 
 	papermapimage.mousemove(function (evt){
@@ -117,9 +137,16 @@ $( document ).ready(function() {
 			// click to select circle
 
 			if(mode == "linedrawing"){
-				endLine(this);
-				currentCircle = this;
-				startLine(this);
+				if(currentCircle != this){
+					unsetSelectedCircle();
+					endLine(this);
+					currentCircle = this;
+					startLine(this);
+				}
+			}else if (mode == "circlecreating"){
+				// circle is selected
+				unsetSelectedCircle();
+				setSelectedCircle(this);
 			}
 			console.log("circleclicked");
 			selectedCircle = this;
@@ -130,9 +157,11 @@ $( document ).ready(function() {
 
 			if(mode == "linedrawing" && this == currentCircle){
 				// end drawing mode, destroy current line
+				unsetSelectedCircle();
 				destroyLine(currentLine);
 				mode = "circlecreating";
 			}else{
+				unsetSelectedCircle();
 				console.log("circledblclicked");
 				mode = "linedrawing";
 				currentCircle = this;
@@ -140,10 +169,83 @@ $( document ).ready(function() {
 			}
 
 		});
+
+		circle.mouseover(function(evt){
+			if(this != selectedCircle){
+				this.attr("stroke","#0f0");
+				this.attr("stroke-width",3);
+				this.attr("fill", "#f5f");
+				this.attr("fill-opacity",".4");
+			}
+		});
+		circle.mouseout(function(evt){
+			if (this != selectedCircle){
+				this.attr("stroke","#f00");
+				this.attr("stroke-width",1);
+				this.attr("fill", "#5f5");
+				this.attr("fill-opacity",".2");
+			}
+		});
+
+
+		var cstartx;
+		var cstarty;
+
+		circle.drag(
+
+			function(dx,dy, x,y){
+
+				$("#debug").text(dx+", "+ dy);
+
+				vx = cstartx + dx;
+				vy = cstarty + dy;
+				circle.attr("cx", vx);
+				circle.attr("cy", vy);
+
+				updateCirclePosition(this, vx, vy);
+			 },
+			 function(){
+			 	cstartx = circle.attr("cx");
+			 	cstarty = circle.attr("cy");
+			 	/*
+				$(".facetag").css("border","none");
+				$("#faces"+index).css("border","2px solid black");
+				$("#faces"+index).css("border-radius","5px");
+				*/
+			 }, 
+			 function (evt) {
+
+
+			  });
+
 		return circle;
 
 	}
 
+
+	function updateCirclePosition(circle, newX, newY){
+		
+		
+		$.each(circle.data("lines"), function(index, line){
+
+			var sx= line.attrs.path[0][1];
+			var sy= line.attrs.path[0][2];
+			var ex= line.attrs.path[1][1];
+			var ey= line.attrs.path[1][2];
+
+			var pathString;
+			if(circle == line.data("startCircle")){
+
+			    line.attr("path", [["M",newX,newY],["L",ex,ey]]);
+
+			}else {
+
+			    line.attr("path", [["M",sx,sy],["L",newX,newY]]);
+
+			}
+		});
+
+	}
 
 	function startLine(circle){
 		// start current line at current circle
@@ -157,8 +259,11 @@ $( document ).ready(function() {
 		console.log("creating " + pathString);
 		currentLine = paper.path(pathString);
 		currentLine.data("startCircle", circle);
+		circle.data("lines").push(currentLine);
+
 
 		currentLine.dblclick(function(evt){
+			unsetSelectedCircle();
 			console.log("path doubleclicked");
 		});
 
@@ -166,17 +271,52 @@ $( document ).ready(function() {
 
 	function endLine(circle){
 		// end current line at current circle
-		console.log("ending Line");
-		console.log(currentLine);
 
-		var sx = circle.attrs.cx ;
-		var sy = circle.attrs.cy ;
+		if(currentLine.data("startCircle") != circle){
+			console.log("ending Line");
+			console.log(currentLine);
 
-		currentLine.data("endCircle", circle);
-		circle.data("lines", circle.data("lines").push(currentLine));
+			var ex = circle.attrs.cx ;
+			var ey = circle.attrs.cy ;
 
-		currentLine = false;
+		    var sx = currentLine.attrs.path[0][1];
+		    var sy = currentLine.attrs.path[0][2];
 
+		    currentLine.attr("path", [["M",sx,sy],["L",ex,ey]]);
+
+			currentLine.data("endCircle", circle);
+			circle.data("lines").push(currentLine);
+			console.log(circle.data("lines"));
+			currentLine = false;
+		}
+
+	}
+
+	function setSelectedCircle(circle){
+		selectedCircle = circle;
+		selectedCircle.attr("stroke","#00f");
+		selectedCircle.attr("stroke-width",4);
+		selectedCircle.attr("fill", "#f5f");
+		selectedCircle.attr("fill-opacity",".4");
+	}
+
+	function unsetSelectedCircle(){
+		if(selectedCircle){
+			selectedCircle.attr("stroke","#f00");
+			selectedCircle.attr("stroke-width",1);
+			selectedCircle.attr("fill", "#5f5");
+			selectedCircle.attr("fill-opacity",".2");
+
+			selectedCircle = false;
+		}
+	}
+
+	function destroyCircle(circle){
+		$.each(circle.data("lines"), function(index, line){
+			console.log("destroying circle's line");
+			destroyLine(line);
+		});
+		circle.remove();
 	}
 
 	function destroyLine(line){
@@ -199,7 +339,7 @@ $( document ).ready(function() {
 		<div class="row-fluid-banner" >
 			<div class="span6" id="mapelem"  width="400" height="600" ></div>
 			<div class="span4" id="mapmetadata">
-				<div id="debug"></div>
+				<div id="debug">debug</div>
 			</div>
 		</div>
 
