@@ -63,7 +63,6 @@ $( document ).ready(function() {
 	papermapimage.dblclick(function(evt){
 	    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
 	    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
-		console.log("image dblclick");
 		if(mode == "circlecreating"){
 			// start drawing mode
 			mode = "linedrawing";
@@ -72,7 +71,6 @@ $( document ).ready(function() {
 			startLine(circle);
 		}else if(mode == "linedrawing"){
 			unsetSelectedCircle();
-			console.log("ending linedrawing");
 			var circle = createCircle(x,y);
 			endLine(circle);
 			// end linedrawing mode, go back to circlecreating mode 
@@ -95,9 +93,6 @@ $( document ).ready(function() {
 
 
 	$(window).keypress(function (evt){
-
-    	console.log("keypressed");
-      	console.log(evt);
        	if(evt.charCode == 100 && selectedCircle){ // 'd' is pressed
        		destroyCircle(selectedCircle);
        	}
@@ -121,7 +116,6 @@ $( document ).ready(function() {
 
 	function createCircle(x, y){
 		// make a circle
-		console.log("clicked at " + x + " , " + y);
 
 		var circle = paper.circle(x,y, 5);
 
@@ -148,7 +142,6 @@ $( document ).ready(function() {
 				unsetSelectedCircle();
 				setSelectedCircle(this);
 			}
-			console.log("circleclicked");
 			selectedCircle = this;
 			currenLine = false;
 		});
@@ -162,7 +155,6 @@ $( document ).ready(function() {
 				mode = "circlecreating";
 			}else{
 				unsetSelectedCircle();
-				console.log("circledblclicked");
 				mode = "linedrawing";
 				currentCircle = this;
 				startLine(currentCircle);
@@ -249,14 +241,10 @@ $( document ).ready(function() {
 
 	function startLine(circle){
 		// start current line at current circle
-		console.log("starting Line");
-		console.log(currentCircle);
 		var sx = circle.attrs.cx;
 		var sy = circle.attrs.cy;
 		
 		var pathString = "M"+sx+","+sy+"L"+sx+","+sy;
-
-		console.log("creating " + pathString);
 		currentLine = paper.path(pathString);
 		currentLine.data("startCircle", circle);
 		circle.data("lines").push(currentLine);
@@ -264,7 +252,6 @@ $( document ).ready(function() {
 
 		currentLine.dblclick(function(evt){
 			unsetSelectedCircle();
-			console.log("path doubleclicked");
 		});
 
 	}
@@ -273,8 +260,6 @@ $( document ).ready(function() {
 		// end current line at current circle
 
 		if(currentLine.data("startCircle") != circle){
-			console.log("ending Line");
-			console.log(currentLine);
 
 			var ex = circle.attrs.cx ;
 			var ey = circle.attrs.cy ;
@@ -286,7 +271,6 @@ $( document ).ready(function() {
 
 			currentLine.data("endCircle", circle);
 			circle.data("lines").push(currentLine);
-			console.log(circle.data("lines"));
 			currentLine = false;
 		}
 
@@ -313,7 +297,6 @@ $( document ).ready(function() {
 
 	function destroyCircle(circle){
 		$.each(circle.data("lines"), function(index, line){
-			console.log("destroying circle's line");
 			destroyLine(line);
 		});
 		circle.remove();
