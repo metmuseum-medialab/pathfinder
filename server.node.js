@@ -49,7 +49,7 @@ function startServer(){
   
 }
 
-
+// added comment
 function parseRequest(req, res){
   console.log("got request");
   var parsed = urlparser.parse(req.url, true)
