@@ -16,6 +16,8 @@ var urlparser = require("url");
 var fs = require("fs");
 var pathparser = require("path");
 
+var dataFilename = "data/graph.json";
+
 var jsdom = require("jsdom"); 
 $ = require("jquery")(jsdom.jsdom().createWindow()); 
 
@@ -62,8 +64,10 @@ function parseRequest(req, res){
 
   if(!query.action){
     sendFile(parsed.pathname, query, res);
-  }else if (query.action == "listpads"){
-
+  }else if (query.action == "savegraph"){
+    saveGraph(req, res, query);
+  }else if (query.action == "loadgraph"){
+    loadGraph(req, res, query);
   }else{
    res.writeHead(200, {'Content-Type': 'text/html'});
    res.end("<html><body><pre>not sure what to do</pre></body></html>");
@@ -72,6 +76,55 @@ function parseRequest(req, res){
 }
 
 
+function saveGraph(req, res, query){
+  var graph = JSON.parse(query.graph);
+
+  var graphstring = JSON.stringify(graph, null, ' ');
+
+  console.log("saving");
+  console.log(graph);
+
+  fs.writeFile(dataFilename, graphstring, function (err) {
+    if (err) { 
+      var contentType = "application/json";
+      res.writeHead(200, {'Content-Type': contentType});
+
+      res.end(JSON.stringify({result: "bad", message: err}));
+
+      return;
+    };
+    var contentType = "application/json";
+    res.writeHead(200, {'Content-Type': contentType});
+
+    res.end(JSON.stringify({result: "good"}));
+
+    console.log('data saved to file ' + dataFilename);
+  });
+
+
+
+}
+
+function loadGraph(req, res, query){
+  console.log("loading");
+  console.log(query);
+
+  fs.readFile(dataFilename, function(err, data) {
+    if(err){
+      console.log(err);
+      var contentType = "application/json";
+      res.writeHead(200, {'Content-Type': contentType});
+      res.end(JSON.stringify({result: "bad", message: err}));
+      return;
+    }
+    var contentType = "application/json";
+    res.writeHead(200, {'Content-Type': contentType});
+    res.end(data);
+    
+
+  });
+
+}
 
 
 var dataCache = {};

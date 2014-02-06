@@ -37,10 +37,33 @@ $( document ).ready(function() {
 	var currentCircle = false;
 	var selectedCircle = false;
 	var currentLine = false;
+	var selectedLine = false;
 
 
-	$("#dump").click(function(){
-		console.log("dumping");
+	$("#load").click(function(){
+		console.log("loading graph");
+		$.ajax({
+			url : "/?action=loadgraph" ,
+			contentType : 'application/json',
+	  		success : function(rdata, status){
+	  			console.log("success");
+	  			console.log(rdata);
+	  			clearGraph();
+	  			loadGraph(rdata);
+	  		},
+
+	  		error : function(jqXHR, status, message){
+	  			console.log("error ");
+	  			console.log(status);
+	  			console.log(message);
+	  		}
+		});		
+
+
+	});
+
+	$("#save").click(function(){
+		console.log("saving graph");
 		var data = {nodes : {}, edges : {}};
 		paper.forEach(function(elem){
 			console.log(elem);
@@ -49,15 +72,38 @@ $( document ).ready(function() {
 				var y = elem.attr("cy");
 				var name = x + "_" + y;				
 				console.log("circle " + name);
+				var ndata = {x : x, y: y};
+				data.nodes[name] = ndata;
 			}else if(elem.type == "path"){
 				var sx = elem.data("startCircle").attr("cx");
 				var sy = elem.data("startCircle").attr("cy");
 				var ex = elem.data("endCircle").attr("cx");
 				var ey = elem.data("endCircle").attr("cy");
+				var sc_name = sx+"_"+sy;
+				var ec_name = ex+"_"+ey;
 				var name = sx+"_"+sy+":"+ex +"_"+ey;
+				var edata = {sx : sx , sy : sy , ex :ex , ey: ey, startNode : sc_name , endNode : ec_name};
 				console.log("path " + name);
+				data.edges[name] = edata;
 			}
 		});
+		// save data to server
+		var ajax_data = {graph: JSON.stringify(data)};
+		$.ajax({
+			url : "/?action=savegraph" ,
+			data : ajax_data,
+			contentType : 'application/json',
+	  		success : function(rdata, status){
+	  			console.log("success");
+	  			console.log(rdata);
+	  		},
+
+	  		error : function(jqXHR, status, message){
+	  			console.log("error ");
+	  			console.log(status);
+	  			console.log(message);
+	  		}
+		});		
 	});
 
 	papermapimage.dblclick(function(evt){
@@ -96,6 +142,9 @@ $( document ).ready(function() {
        	if(evt.charCode == 100 && selectedCircle){ // 'd' is pressed
        		destroyCircle(selectedCircle);
        	}
+       	if(evt.charCode == 100 && selectedLine){ // 'd' is pressed
+       		destroyLine(selectedLine);
+       	}
 
 	});
 
@@ -113,11 +162,50 @@ $( document ).ready(function() {
 	});
 
 
+	function clearGraph(){
+		paper.forEach(function(elem){
+			console.log(elem);
+			if(elem.type == "circle" || elem.type == "path"){
+				elem.remove();
+			}
+		});
+	}
+
+	function loadGraph(graph){
+		$.each(graph.nodes, function(index, node){
+			var circle = createCircle(node.x, node.y);
+			console.log(circle.data("lines"));
+			console.log(circle.data());
+			console.log(circle.data("lines"));
+			console.log(circle.data("linesx"));
+			$.each(node, function(index, value){
+				circle.data(index, value);
+			});
+			console.log(circle.data());
+
+		});
+		$.each(graph.edges, function(index, edge){
+			var line = createLine(edge.sx, edge.sy, edge.ex, edge.ey);
+			var startCircle = paper.getById(edge.sx+"_"+edge.sy);
+			var endCircle  = paper.getById(edge.ex+"_"+edge.ey);
+			line.id = startCircle.id + ":" + endCircle.id;
+			line.data("startCircle", startCircle);
+			line.data("endCircle", endCircle);
+			console.log(startCircle.data());
+			startCircle.data("lines").push(line);
+			endCircle.data("lines").push(line);
+			$.each(edge, function(index, value){
+				line.data(index, value);
+			});
+		});
+
+	}
 
 	function createCircle(x, y){
 		// make a circle
 
 		var circle = paper.circle(x,y, 5);
+		circle.id  = x +"_"+y;
 
 		currentCircle = circle;
 
@@ -129,7 +217,6 @@ $( document ).ready(function() {
 		circle.attr("fill-opacity",".2");
 		circle.click(function(evt2){
 			// click to select circle
-
 			if(mode == "linedrawing"){
 				if(currentCircle != this){
 					unsetSelectedCircle();
@@ -143,7 +230,6 @@ $( document ).ready(function() {
 				setSelectedCircle(this);
 			}
 			selectedCircle = this;
-			currenLine = false;
 		});
 		circle.dblclick(function(evt3){
 			// dblclick to start drawing mode.
@@ -208,7 +294,8 @@ $( document ).ready(function() {
 			 function (evt) {
 
 
-			  });
+			  }
+		);
 
 		return circle;
 
@@ -217,8 +304,14 @@ $( document ).ready(function() {
 
 	function updateCirclePosition(circle, newX, newY){
 		
+
+		var deleteMe = false;
 		
 		$.each(circle.data("lines"), function(index, line){
+
+			if(!line){
+				return true;
+			}
 
 			var sx= line.attrs.path[0][1];
 			var sy= line.attrs.path[0][2];
@@ -236,6 +329,39 @@ $( document ).ready(function() {
 
 			}
 		});
+	}
+
+
+	function createLine(sx, sy, ex, ey){
+		var pathString = "M"+sx+","+sy+"L"+ex+","+ey;
+		var line = paper.path(pathString);
+
+		line.attr("stroke","#000");
+		line.attr("stroke-width",1);
+
+		line.click(function(evt){
+			if(mode == "circlecreating"){
+				setSelectedLine(this);
+			}
+		});
+
+		line.mouseover(function(){
+			if(mode == "circlecreating"){
+				if(line != selectedLine){
+					this.attr("stroke-width", 2);
+					this.attr("stroke", "#00f");
+				}
+			}
+		});
+		line.mouseout(function(){
+			if(mode == "circlecreating"){
+				if(line != selectedLine){
+					line.attr("stroke","#000");
+					line.attr("stroke-width",1);		
+				}	
+			}
+		});
+		return line;
 
 	}
 
@@ -243,16 +369,13 @@ $( document ).ready(function() {
 		// start current line at current circle
 		var sx = circle.attrs.cx;
 		var sy = circle.attrs.cy;
-		
-		var pathString = "M"+sx+","+sy+"L"+sx+","+sy;
-		currentLine = paper.path(pathString);
-		currentLine.data("startCircle", circle);
-		circle.data("lines").push(currentLine);
 
+		var line = createLine(sx, sy, sx, sy);
 
-		currentLine.dblclick(function(evt){
-			unsetSelectedCircle();
-		});
+		line.data("startCircle", circle);
+		circle.data("lines").push(line);
+
+		currentLine = line;
 
 	}
 
@@ -277,6 +400,7 @@ $( document ).ready(function() {
 	}
 
 	function setSelectedCircle(circle){
+		unsetSelectedLine();
 		selectedCircle = circle;
 		selectedCircle.attr("stroke","#00f");
 		selectedCircle.attr("stroke-width",4);
@@ -295,15 +419,77 @@ $( document ).ready(function() {
 		}
 	}
 
+	function setSelectedLine(line){
+		unsetSelectedCircle();
+		unsetSelectedLine();
+
+		line.attr("stroke","#0f0");
+		line.attr("stroke-width",2);
+
+		selectedLine = line;
+
+	}
+
+	function unsetSelectedLine(){
+
+
+		if(selectedLine){
+			selectedLine.attr("stroke","#000");
+			selectedLine.attr("stroke-width",1);
+			selectedLine = false;
+		}
+	}
+
 	function destroyCircle(circle){
 		$.each(circle.data("lines"), function(index, line){
 			destroyLine(line);
 		});
+		if(circle == selectedCircle){
+			unsetSelectedLine();
+		}
 		circle.remove();
 	}
 
 	function destroyLine(line){
+		console.log("destroying line");
+		// need to remove the line from all circles as well.
+		removeLineFromCircles(line);
+		if(line == selectedLine){
+			unsetSelectedLine();
+		}
 		line.remove();
+	}
+
+	function removeLineFromCircles(line){
+		if(!line){
+			return;
+		}
+		var startIndexToRemove;
+		if(line.data("startCircle")){
+			$.each(line.data("startCircle").data("lines"), function (index, itsLine){
+			if(itsLine == line){
+					startIndexToRemove = index;
+				}
+			});
+		}
+		var endIndexToRemove = false;
+		if(line.data("endCircle")){
+			$.each(line.data("endCircle").data("lines"), function (index, itsLine){
+				if(itsLine == line){
+					endIndexToRemove = index;
+				}
+			});
+		}
+		if(endIndexToRemove){
+			var lines = line.data("endCircle").data("lines");
+			delete lines[endIndexToRemove];
+		}
+
+		if(startIndexToRemove){
+			var lines = line.data("startCircle").data("lines");
+			delete lines[startIndexToRemove];
+		}
+
 	}
 
 });
@@ -316,7 +502,7 @@ $( document ).ready(function() {
 
 	<div class="container">
 		<div class="row-fluid-banner">
-			<div class="span6" align="left"><h1>PathFinder MapMaker (<span id="dump">Dump Data</span>)</h1></div>
+			<div class="span6" align="left"><h1>PathFinder MapMaker (<span id="save">Save Data</span>)(<span id="load">Load Data</span>)</h1></div>
 		</div>
 
 		<div class="row-fluid-banner" >
