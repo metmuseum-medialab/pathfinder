@@ -30,7 +30,7 @@ $( document ).ready(function() {
 
   	var imageurl = "floor-plan_s.jpg";
 
-	var papermapimage = paper.image(imageurl, 0,0, 400, 600);
+	var papermapimage;
   	
 	var mode = "circlecreating"; // linedrawing , circledragging, circlecreating
 
@@ -38,6 +38,10 @@ $( document ).ready(function() {
 	var selectedCircle = false;
 	var currentLine = false;
 	var selectedLine = false;
+
+
+
+	setupPaperImage(imageurl);
 
 
 	$("#load").click(function(){
@@ -49,6 +53,7 @@ $( document ).ready(function() {
 	  			console.log("success");
 	  			console.log(rdata);
 	  			clearGraph();
+	  			setupPaperImage(imageurl);
 	  			loadGraph(rdata);
 	  		},
 
@@ -116,74 +121,83 @@ $( document ).ready(function() {
 		});		
 	});
 
-	papermapimage.dblclick(function(evt){
-	    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
-	    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
-		if(mode == "circlecreating"){
-			// start drawing mode
-			mode = "linedrawing";
-			unsetSelectedCircle();
-			var circle = createCircle(x,y);
-			startLine(circle);
-		}else if(mode == "linedrawing"){
-			unsetSelectedCircle();
-			var circle = createCircle(x,y);
-			endLine(circle);
-			// end linedrawing mode, go back to circlecreating mode 
-			mode = "circlecreating";
-		}
 
-	});	
+	function setupPaperImage(imageurl){
 
-	papermapimage.click(function (evt){
-	    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
-	    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
-
-	    if(mode == "linedrawing"){
-	    	// create new circle, end line at new circle, start new line at circle
-	    	circle = createCircle(x,y);
-	    	endLine(circle);
-	    	startLine(circle);
-		}
-	});
+		papermapimage = paper.image(imageurl, 0,0, 400, 600);
 
 
+		papermapimage.dblclick(function(evt){
+		    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
+		    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
+			if(mode == "circlecreating"){
+				// start drawing mode
+				mode = "linedrawing";
+				unsetSelectedCircle();
+				var circle = createCircle(x,y);
+				startLine(circle);
+			}else if(mode == "linedrawing"){
+				unsetSelectedCircle();
+				var circle = createCircle(x,y);
+				endLine(circle);
+				// end linedrawing mode, go back to circlecreating mode 
+				mode = "circlecreating";
+			}
 
-	$(window).keypress(function (evt){
-       	if(evt.charCode == 100 && selectedCircle && !editfocus){ 
-       	// 'd' is pressed 
-       	// now, if someone is editing a form, this will have no effect.
+		});	
 
-       		destroyCircle(selectedCircle);
-       	}
-       	if(evt.charCode == 100 && selectedLine && !editfocus){ // 'd' is pressed
-       		destroyLine(selectedLine);
-       	}
-
-	});
-
-	papermapimage.mousemove(function (evt){
-		if(mode == "linedrawing"){
+		papermapimage.click(function (evt){
 		    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
 		    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
 
-		    var sx = currentLine.attrs.path[0][1];
-		    var sy = currentLine.attrs.path[0][2];
+		    if(mode == "linedrawing"){
+		    	// create new circle, end line at new circle, start new line at circle
+		    	circle = createCircle(x,y);
+		    	endLine(circle);
+		    	startLine(circle);
+			}
+		});
 
-		    currentLine.attr("path", [["M",sx,sy],["L",x,y]]);
 
-		}
-	});
 
+		$(window).keypress(function (evt){
+	       	if(evt.charCode == 100 && selectedCircle && !editfocus){ 
+	       	// 'd' is pressed 
+	       	// now, if someone is editing a form, this will have no effect.
+
+	       		destroyCircle(selectedCircle);
+	       	}
+	       	if(evt.charCode == 100 && selectedLine && !editfocus){ // 'd' is pressed
+	       		destroyLine(selectedLine);
+	       	}
+
+		});
+
+		papermapimage.mousemove(function (evt){
+			if(mode == "linedrawing"){
+			    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
+			    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
+
+			    var sx = currentLine.attrs.path[0][1];
+			    var sy = currentLine.attrs.path[0][2];
+
+			    currentLine.attr("path", [["M",sx,sy],["L",x,y]]);
+
+			}
+		});
+	}
 
 	function clearGraph(){
 		// ikes, this doesn't seem to work yet...
+		paper.clear();
+/*
 		paper.forEach(function(elem){
 			console.log(elem);
 			if(elem.type == "circle" || elem.type == "path"){
 				elem.remove();
 			}
 		});
+*/
 	}
 
 	function loadGraph(graph){
@@ -199,6 +213,8 @@ $( document ).ready(function() {
 			console.log(circle.data());
 
 		});
+
+		// still problems with lines...
 		$.each(graph.edges, function(index, edge){
 			var line = createLine(edge.sx, edge.sy, edge.ex, edge.ey);
 			var startCircle = paper.getById(edge.sx+"_"+edge.sy);
