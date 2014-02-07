@@ -72,7 +72,10 @@ $( document ).ready(function() {
 				var y = elem.attr("cy");
 				var name = x + "_" + y;				
 				console.log("circle " + name);
-				var ndata = {x : x, y: y};
+				var ndata = {x : x, 
+					y: y,
+					lightlevel : elem.data("lightlevel")
+				};
 				data.nodes[name] = ndata;
 			}else if(elem.type == "path"){
 				var sx = elem.data("startCircle").attr("cx");
@@ -82,7 +85,14 @@ $( document ).ready(function() {
 				var sc_name = sx+"_"+sy;
 				var ec_name = ex+"_"+ey;
 				var name = sx+"_"+sy+":"+ex +"_"+ey;
-				var edata = {sx : sx , sy : sy , ex :ex , ey: ey, startNode : sc_name , endNode : ec_name};
+				var edata = {sx : sx , 
+							sy : sy , 
+							ex :ex , 
+							ey: ey, 
+							startNode : sc_name , 
+							endNode : ec_name,
+							stairs : elem.data("stairs")
+						};
 				console.log("path " + name);
 				data.edges[name] = edata;
 			}
@@ -406,6 +416,19 @@ $( document ).ready(function() {
 		selectedCircle.attr("stroke-width",4);
 		selectedCircle.attr("fill", "#f5f");
 		selectedCircle.attr("fill-opacity",".4");
+		$("#edit").empty();
+		var form = $("<form>").appendTo("#edit");
+		form.append("<span>Gallery Number:</span><input type='text' name='gallery' size='5' /><BR>");
+		var select = $("<span>Light Level:</span><select name='lightlevel'><BR>").appendTo(form);
+		select.append("<option value='low'>low</option>")
+		.append("<option value='medium'>medium</option>")
+		.append("<option value='high'>high</option>");
+		form.change(function(evt){
+			console.log("keypressed 1");
+			console.log($("select[name=lightlevel]", this). val());
+			circle.data("lightlevel", $("select[name=lightlevel]", this). val());
+		});
+
 	}
 
 	function unsetSelectedCircle(){
@@ -427,6 +450,14 @@ $( document ).ready(function() {
 		line.attr("stroke-width",2);
 
 		selectedLine = line;
+
+		// set selected line form
+		var form = $("<form>").appendTo("#edit");
+		var checkbox = $("<span>Stairs : </span><input type='checkbox' class='stairs' name='stairs' value='true' label='stairs'>").appendTo(form);
+
+		form.change(function(evt){
+			line.data("stairs", $(".stairs", this)[0].checked);
+		});
 
 	}
 
@@ -451,6 +482,9 @@ $( document ).ready(function() {
 	}
 
 	function destroyLine(line){
+		if(!line){
+			return;
+		}
 		console.log("destroying line");
 		// need to remove the line from all circles as well.
 		removeLineFromCircles(line);
@@ -509,11 +543,12 @@ $( document ).ready(function() {
 			<div class="span6" id="mapelem"  width="400" height="600" ></div>
 			<div class="span4" id="mapmetadata">
 				<div id="debug">debug</div>
+				<div id="edit">edit</div>
 			</div>
 		</div>
 
 		<div class="row-fluid-banner" >
-			<div class="span12" id="summarydata"></div>
+			<div class="span12" id="summarydata">summary</div>
 		</div>
 
 	</div>
