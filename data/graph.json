@@ -1,5 +1,14 @@
 {
  "nodes": {
+  "117_142": {
+   "x": 117,
+   "y": 142,
+   "lightlevel": "medium"
+  },
+  "218_161": {
+   "x": 218,
+   "y": 161
+  },
   "92_165": {
    "x": 92,
    "y": 165
@@ -11,6 +20,18 @@
   }
  },
  "edges": {
+  "117_142:undefined_undefined": {
+   "sx": 117,
+   "sy": 142,
+   "startNode": "117_142",
+   "endNode": "undefined_undefined"
+  },
+  "undefined_undefined:218_161": {
+   "ex": 218,
+   "ey": 161,
+   "startNode": "undefined_undefined",
+   "endNode": "218_161"
+  },
   "92_165:174_163": {
    "sx": 92,
    "sy": 165,

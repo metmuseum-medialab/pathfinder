@@ -27,10 +27,10 @@ if mouse is double-clicked in map: make a circle,
 $( document ).ready(function() {
   	var paper = Raphael("mapelem", 400, 600);
 
+
   	var imageurl = "floor-plan_s.jpg";
 
 	var papermapimage = paper.image(imageurl, 0,0, 400, 600);
-
   	
 	var mode = "circlecreating"; // linedrawing , circledragging, circlecreating
 
@@ -148,11 +148,15 @@ $( document ).ready(function() {
 	});
 
 
+
 	$(window).keypress(function (evt){
-       	if(evt.charCode == 100 && selectedCircle){ // 'd' is pressed
+       	if(evt.charCode == 100 && selectedCircle && !editfocus){ 
+       	// 'd' is pressed 
+       	// now, if someone is editing a form, this will have no effect.
+
        		destroyCircle(selectedCircle);
        	}
-       	if(evt.charCode == 100 && selectedLine){ // 'd' is pressed
+       	if(evt.charCode == 100 && selectedLine && !editfocus){ // 'd' is pressed
        		destroyLine(selectedLine);
        	}
 
@@ -173,6 +177,7 @@ $( document ).ready(function() {
 
 
 	function clearGraph(){
+		// ikes, this doesn't seem to work yet...
 		paper.forEach(function(elem){
 			console.log(elem);
 			if(elem.type == "circle" || elem.type == "path"){
@@ -416,17 +421,29 @@ $( document ).ready(function() {
 		selectedCircle.attr("stroke-width",4);
 		selectedCircle.attr("fill", "#f5f");
 		selectedCircle.attr("fill-opacity",".4");
+
+
 		$("#edit").empty();
+		var deletenode = $("<span>Delete</span>").appendTo("#edit").click(function(){
+			destroyCircle(circle);
+			$("#edit").empty();			
+		});
+
 		var form = $("<form>").appendTo("#edit");
 		form.append("<span>Gallery Number:</span><input type='text' name='gallery' size='5' /><BR>");
 		var select = $("<span>Light Level:</span><select name='lightlevel'><BR>").appendTo(form);
+		select.append("<option value=''>Select Light Level...</option>")
 		select.append("<option value='low'>low</option>")
 		.append("<option value='medium'>medium</option>")
 		.append("<option value='high'>high</option>");
 		form.change(function(evt){
-			console.log("keypressed 1");
-			console.log($("select[name=lightlevel]", this). val());
 			circle.data("lightlevel", $("select[name=lightlevel]", this). val());
+		});
+		$(":input" ,form).focus(function(){
+			editfocus = true;
+		});
+		$(":input" ,form).blur(function(){
+			editfocus = false;
 		});
 
 	}
@@ -452,12 +469,26 @@ $( document ).ready(function() {
 		selectedLine = line;
 
 		// set selected line form
+		$("#edit").empty();
+		var deletenode = $("<span>Delete</span>").appendTo("#edit").click(function(){
+			destroyLine(line);
+			$("#edit").empty();
+		});
+
 		var form = $("<form>").appendTo("#edit");
 		var checkbox = $("<span>Stairs : </span><input type='checkbox' class='stairs' name='stairs' value='true' label='stairs'>").appendTo(form);
 
 		form.change(function(evt){
 			line.data("stairs", $(".stairs", this)[0].checked);
 		});
+
+		$(":input" ,form).focus(function(){
+			editfocus = true;
+		});
+		$(":input" ,form).blur(function(){
+			editfocus = false;
+		});
+
 
 	}
 
@@ -485,7 +516,6 @@ $( document ).ready(function() {
 		if(!line){
 			return;
 		}
-		console.log("destroying line");
 		// need to remove the line from all circles as well.
 		removeLineFromCircles(line);
 		if(line == selectedLine){
