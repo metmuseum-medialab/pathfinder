@@ -132,6 +132,8 @@ $( document ).ready(function() {
 	});
 
 
+
+
 	function setupPaperImage(imageurl){
 
 		papermapimage = paper.image(imageurl, 0,0, imageWidth, imageHeight);
@@ -157,7 +159,13 @@ $( document ).ready(function() {
 		});	
 
 		papermapimage.click(function (evt){
-			console.log("image clicked");console.log(evt);
+
+		});
+
+		$("#mapelem").click(function(evt){
+			console.log("mapelem click");
+			console.log(evt);
+						console.log("image clicked");console.log(evt);
 		    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
 		    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
 
@@ -168,8 +176,10 @@ $( document ).ready(function() {
 		    	startLine(circle);
 			}
 		});
-
-
+		$(window).click(function(evt){
+			console.log("window click");
+			console.log(evt);
+		});
 
 		$(window).keypress(function (evt){
 	       	if(evt.charCode == 100 && selectedCircle && !editfocus){ 
