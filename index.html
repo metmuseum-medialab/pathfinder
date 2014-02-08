@@ -25,10 +25,20 @@ if mouse is double-clicked in map: make a circle,
 
 */
 $( document ).ready(function() {
-  	var paper = Raphael("mapelem", 400, 600);
-
-
   	var imageurl = "metmap_fl1.png";
+  	var srcWidth = 3214;
+  	var srcHeight = 2142;
+  	var imageScale = .3;
+
+
+  	var imageWidth = srcWidth * imageScale;
+  	var imageHeight = srcHeight * imageScale;
+
+
+
+  	var paper = Raphael("mapelem", imageWidth, imageHeight);
+  	$("#mapelem").height(imageHeight).width(imageWidth);
+
 
 	var papermapimage;
   	
@@ -124,7 +134,7 @@ $( document ).ready(function() {
 
 	function setupPaperImage(imageurl){
 
-		papermapimage = paper.image(imageurl, 0,0, 400, 600);
+		papermapimage = paper.image(imageurl, 0,0, imageWidth, imageHeight);
 
 
 		papermapimage.dblclick(function(evt){
@@ -147,6 +157,7 @@ $( document ).ready(function() {
 		});	
 
 		papermapimage.click(function (evt){
+			console.log("image clicked");console.log(evt);
 		    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
 		    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
 
