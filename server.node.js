@@ -16,7 +16,9 @@ var urlparser = require("url");
 var fs = require("fs");
 var pathparser = require("path");
 
-var dataFilename = "data/graph.json";
+var dataFilename = "graph.json";
+var dataDir = "data/";
+
 
 var jsdom = require("jsdom"); 
 $ = require("jquery")(jsdom.jsdom().createWindow()); 
@@ -68,6 +70,8 @@ function parseRequest(req, res){
     saveGraph(req, res, query);
   }else if (query.action == "loadgraph"){
     loadGraph(req, res, query);
+  }else if (query.action == "getgraphlist"){
+    getGraphList(req, res, query);
   }else{
    res.writeHead(200, {'Content-Type': 'text/html'});
    res.end("<html><body><pre>not sure what to do</pre></body></html>");
@@ -80,6 +84,10 @@ function saveGraph(req, res, query){
   var graph = JSON.parse(query.graph);
 
   var graphstring = JSON.stringify(graph, null, ' ');
+
+  var date = new Date();
+  var datetime = date.getTime();
+  var dataFilename = dataDir + "graph."+datetime+".json";
 
   console.log("saving");
   console.log(graph);
@@ -100,16 +108,51 @@ function saveGraph(req, res, query){
 
     console.log('data saved to file ' + dataFilename);
   });
+}
 
 
+function getGraphList(req, res, query){
+  console.log("getting graph list");
+  var filelist = getDataFileList(dataDir, function(list){
+    console.log("got list");
+    console.log(list);
+    var contentType = "application/json";
+    res.writeHead(200, {'Content-Type': contentType});
 
+    res.end(JSON.stringify(list));
+
+  });
+}
+
+function getDataFileList(dirname, callback2){
+  var filelist = fs.readdirSync(dirname);
+  console.log(filelist);
+  var newList = {};
+  async.eachSeries(filelist, 
+    function(file, callback){
+      console.log("file " + file);
+      newList[file] = {file: file};
+      var path = dirname + file;
+      newList[file].stat = fs.statSync(path);
+      console.log(newList);
+      callback();
+    },
+    function(){
+      callback2(newList);
+    }
+  );
 }
 
 function loadGraph(req, res, query){
   console.log("loading");
   console.log(query);
 
-  fs.readFile(dataFilename, function(err, data) {
+  var dataFile = dataFilename;
+  if(query.dataFile){
+    dataFile = dataDir +  query.dataFile;
+  }
+
+  fs.readFile(dataFile, function(err, data) {
     if(err){
       console.log(err);
       var contentType = "application/json";

@@ -56,10 +56,33 @@ $( document ).ready(function() {
 	setupPaperImage(imageurl);
 
 
-	$("#load").click(function(){
-		console.log("loading graph");
+	// load list of graphfiles:
+	$.ajax({
+		url : "/?action=getgraphlist" ,
+		contentType : 'application/json',
+  		success : function(rdata, status){
+  			console.log("success");
+  			console.log(rdata);
+  			$.each(rdata, function(index, filedata){
+  				var string = filedata.file + " : " + filedata.stat.mtime;
+  				$("#fileselect").append("<option value='"+filedata.file+"'>"+string+"</option>");
+  			});
+  		},
+
+  		error : function(jqXHR, status, message){
+  			console.log("error ");
+  			console.log(status);
+  			console.log(message);
+  		}
+	});
+
+	$("#loadbutton").click(function(evt){
+		var filename = $("#fileselect").val();
+		if(!filename || filename == ''){
+			return;
+		}
 		$.ajax({
-			url : "/?action=loadgraph" ,
+			url : "/?action=loadgraph&dataFile="+filename ,
 			contentType : 'application/json',
 	  		success : function(rdata, status){
 	  			console.log("success");
@@ -75,6 +98,12 @@ $( document ).ready(function() {
 	  			console.log(message);
 	  		}
 		});		
+
+	});
+
+
+	$("#load").click(function(){
+		console.log("loading graph");
 
 
 	});
@@ -619,11 +648,17 @@ $( document ).ready(function() {
 
 </head>		
 <body>
-
+<BR><BR>
 
 	<div class="container">
 		<div class="row-fluid-banner">
-			<div class="span6" align="left"><h1>PathFinder MapMaker (<span id="save">Save Data</span>)(<span id="load">Load Data</span>)</h1></div>
+			<div class="span4" align="left"><h1>PathFinder MapMaker </h1></div>
+			<div class="span2" align="center">
+				<span id="save"><B>Save Data</b></span>
+			</div>
+			<div class="span4" align="right">
+				<form id="loadform"><select id="fileselect" name="filename"><option value="">Select File To Load...</option></select><span id="loadbutton"><B>Load</b></span>
+			</div>
 		</div>
 
 		<div class="row-fluid-banner" >
