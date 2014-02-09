@@ -40,6 +40,8 @@ $( document ).ready(function() {
   	$("#mapelem").height(imageHeight).width(imageWidth);
 
 
+  	var editfocus = false;
+
 	var papermapimage;
   	
 	var mode = "circlecreating"; // linedrawing , circledragging, circlecreating
@@ -140,6 +142,15 @@ $( document ).ready(function() {
 
 
 		papermapimage.dblclick(function(evt){
+			// switched to using corresponding events on #mapelem div
+		});	
+
+		papermapimage.click(function (evt){
+			// switched to using corresponding events on #mapelem div
+		});
+
+		$("#mapelem").dblclick(function(evt){
+
 		    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
 		    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
 			if(mode == "circlecreating"){
@@ -156,16 +167,10 @@ $( document ).ready(function() {
 				mode = "circlecreating";
 			}
 
-		});	
-
-		papermapimage.click(function (evt){
 
 		});
-
 		$("#mapelem").click(function(evt){
-			console.log("mapelem click");
-			console.log(evt);
-						console.log("image clicked");console.log(evt);
+
 		    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
 		    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
 
@@ -175,10 +180,6 @@ $( document ).ready(function() {
 		    	endLine(circle);
 		    	startLine(circle);
 			}
-		});
-		$(window).click(function(evt){
-			console.log("window click");
-			console.log(evt);
 		});
 
 		$(window).keypress(function (evt){
@@ -268,6 +269,17 @@ $( document ).ready(function() {
 		circle.attr("fill", "#5f5");
 		circle.attr("fill-opacity",".2");
 		circle.click(function(evt2){
+		    if (evt2.stopPropagation) {
+		    	console.log("no propagate");
+		      evt2.stopPropagation();
+		    }
+		    //IE8 and Lower
+		    else {
+		    	console.log("no propagate");
+		      evt2.cancelBubble = true;
+		    }
+
+
 			// click to select circle
 			if(mode == "linedrawing"){
 				if(currentCircle != this){
@@ -284,8 +296,16 @@ $( document ).ready(function() {
 			selectedCircle = this;
 		});
 		circle.dblclick(function(evt3){
-			// dblclick to start drawing mode.
 
+			   //IE9 & Other Browsers
+		    if (evt3.stopPropagation) {
+		      evt3.stopPropagation();
+		    }
+		    //IE8 and Lower
+		    else {
+		      evt3.cancelBubble = true;
+		    }
+			// dblclick to start drawing mode.
 			if(mode == "linedrawing" && this == currentCircle){
 				// end drawing mode, destroy current line
 				unsetSelectedCircle();
