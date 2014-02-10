@@ -82,12 +82,26 @@ function parseRequest(req, res){
 
 function saveGraph(req, res, query){
   var graph = JSON.parse(query.graph);
-
   var graphstring = JSON.stringify(graph, null, ' ');
 
-  var date = new Date();
-  var datetime = date.getTime();
-  var dataFilename = dataDir + "graph."+datetime+".json";
+  var filename; 
+  var dataFilename;
+  var shortname;
+  if(query.filename && query.filename.trim() != ""){
+    filename = query.filename;
+    if(!filename.match(/\.json$/)){
+      filename += ".json";
+    }
+    shortname = filename;
+    dataFilename = dataDir + filename;
+  }else{
+    var date = new Date();
+    var datetime = date.getTime();
+    shortname = "graph."+datetime+".json";
+    dataFilename = dataDir + shortname;
+
+  }
+
 
   console.log("saving");
   console.log(graph);
@@ -104,7 +118,7 @@ function saveGraph(req, res, query){
     var contentType = "application/json";
     res.writeHead(200, {'Content-Type': contentType});
 
-    res.end(JSON.stringify({result: "good"}));
+    res.end(JSON.stringify({result: "good", filename: shortname}));
 
     console.log('data saved to file ' + dataFilename);
   });
@@ -178,12 +192,18 @@ function sendFile(path, query, res){
   }
   var extname = pathparser.extname(path);
   var contentType = 'text/html';
-  switch (extname) {
+  switch (extname.toLowerCase()) {
     case '.js':
       contentType = 'text/javascript';
       break;
     case '.css':
       contentType = 'text/css';
+      break;
+    case '.png':
+      contentType = 'image/png';
+      break;
+    case '.jpg':
+      contentType = 'image/jpeg';
       break;
   }
 
