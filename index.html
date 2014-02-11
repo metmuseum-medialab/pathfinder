@@ -10,7 +10,7 @@
 
 
 
-<script src="js/jquery-1.10.2.min.js"></script>
+<script src="js/jquery-1.11.0.min.js"></script>
 
 <script src="js/bootstrap.min.js"></script>
 
@@ -133,7 +133,7 @@ $( document ).ready(function() {
 		// save data to server
 		var ajax_data = {graph: JSON.stringify(data), filename: filename};
 		$.ajax({
-			url : "/?action=savegraph" ,
+			url : "?action=savegraph" ,
 			data : ajax_data,
 			contentType : 'application/json',
 	  		success : function(rdata, status){
@@ -157,7 +157,7 @@ $( document ).ready(function() {
 		// load list of graphfiles:
 		$("#load").empty();
 		$.ajax({
-			url : "/?action=getgraphlist" ,
+			url : "?action=getgraphlist" ,
 			contentType : 'application/json',
 	  		success : function(rdata, status){
 	  			console.log("success");
@@ -182,7 +182,7 @@ $( document ).ready(function() {
 
 	function fetchGraphFile(filename){
 		$.ajax({
-			url : "/?action=loadgraph&dataFile="+filename ,
+			url : "?action=loadgraph&dataFile="+filename ,
 			contentType : 'application/json',
 	  		success : function(rdata, status){
 	  			console.log("success");
