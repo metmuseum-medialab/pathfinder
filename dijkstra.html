@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>JSON Sample</title>
+</head>
+<body>
+    <div id="placeholder"></div>
+    <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script>
+  
+    
+
+    $.getJSON('data/GrecoRoman.json', function(graph) {
+        
+        // $.each is a jquery function that iterates over any collection (of objects or arrays)
+        // "index" is the name of the object
+        // "edge" is a var
+
+        $.each(graph.edges, function(index, edge){
+
+            
+               
+                var startNodeName = edge.startNode;
+                var endNodeName = edge.endNode;
+                
+                var startNode = graph.nodes[startNodeName];
+                var endNode = graph.nodes[endNodeName];
+
+                // function to calculate edge length
+                var findEdgeLength = function(x0, y0, x1, y1){
+                    return Math.sqrt((x0 -= x1) * x0 + (y0 -= y1) * y0);
+                };
+                
+                // START NODE -- EDGES
+                if (!startNode.outEdges) {
+                    startNode.outEdges = {};
+                }
+                startNode.outEdges[index] = index;
+                
+            if (typeof endNode !== "undefined") {
+
+                // END NODE -- EDGES
+                
+                    if (!endNode.outEdges) {
+                        endNode.outEdges = {};
+                    }
+                    endNode.outEdges[index] = index;
+                
+                // function to calculate edge length
+                
+                
+                // calculate edge length
+                edge.edgeLength = findEdgeLength(startNode.x, startNode.y, endNode.x, endNode.y);
+                
+           }
+        
+        });         
+
+        // Assign  initial weight  (0 - Infinity) and visited (true/false) value to nodes
+        $.each(graph.nodes, function(index, node){
+
+            startPoint = "365_550";
+            endPoint = "30_551";
+
+            if (index == startPoint) {
+                node.weight = 0;
+                node.visited = true;
+            } else {
+                node.weight = Infinity;
+                node.visited = false; 
+            }
+        });
+
+
+        // function to find lowest weight
+        function findMinWeight() {
+            minWeight = Infinity;
+            
+            $.each(graph.nodes, function(index, node){
+                if (minWeight > node.weight) {
+                    minWeight = node.weight;
+                    minWeightNode = index;
+                }
+            
+            });
+            return minWeightNode;
+        }
+
+        var curNode = findMinWeight(); // store the min node's name
+
+        // cycle through the edges attached to the min node
+        $.each(graph.nodes[curNode].outEdges, function(edge) {
+
+            // evalNode: the node that's on the other end of the edge -- its value will be evaluated and potentially changed
+            
+            if (graph.edges[edge].startNode != curNode) {
+                evalNode = graph.edges[edge].startNode;
+            } else {
+                if (typeof graph.edges[edge].endNode !== "undefined") {
+                    evalNode = graph.edges[edge].endNode;
+                }
+            }
+            
+            // edge length + current node weight
+            var proposedWeight = graph.nodes[curNode].weight + graph.edges[edge].edgeLength; 
+            
+            console.log(evalNode + " - current weight: " + graph.nodes[evalNode].weight);
+            console.log(evalNode + " - proposed weight: " + proposedWeight);
+
+            // if the evalNode has not been visited and has a higher weight than proposed weight, its weight will be changed to the proposed weight
+            if(graph.nodes[evalNode].visited == false) {
+                if (graph.nodes[evalNode].weight > proposedWeight) {
+                    graph.nodes[evalNode].weight = proposedWeight;
+                }
+            }
+            console.log(evalNode + " - new weight: " + graph.nodes[evalNode].weight);
+        });
+
+  });
+    </script>
+</body>
+</html>
