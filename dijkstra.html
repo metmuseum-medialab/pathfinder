@@ -2,25 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>JSON Sample</title>
+    <title>dijkstra v1</title>
 </head>
 <body>
     <div id="placeholder"></div>
     <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
     <script>
   
-    
-
     $.getJSON('data/GrecoRoman.json', function(graph) {
         
+        // FUNCTION TO CLEAN UP DATA AND DELETE "stuff"
+        $.each(graph.edges, function(index, edge){
+            if(edge.endNode == "undefined_undefined"){
+
+                delete graph.edges[index];
+            }
+        });
+
         // $.each is a jquery function that iterates over any collection (of objects or arrays)
         // "index" is the name of the object
         // "edge" is a var
 
         $.each(graph.edges, function(index, edge){
-
-            
-               
+        
                 var startNodeName = edge.startNode;
                 var endNodeName = edge.endNode;
                 
@@ -38,7 +42,7 @@
                 }
                 startNode.outEdges[index] = index;
                 
-            if (typeof endNode !== "undefined") {
+            
 
                 // END NODE -- EDGES
                 
@@ -46,17 +50,12 @@
                         endNode.outEdges = {};
                     }
                     endNode.outEdges[index] = index;
-                
-                // function to calculate edge length
-                
-                
-                // calculate edge length
-                edge.edgeLength = findEdgeLength(startNode.x, startNode.y, endNode.x, endNode.y);
-                
-           }
-        
-        });         
 
+                // calculate edge length
+                edge.edgeLength = findEdgeLength(startNode.x, startNode.y, endNode.x, endNode.y);     
+           
+        });   
+  
         // Assign  initial weight  (0 - Infinity) and visited (true/false) value to nodes
         $.each(graph.nodes, function(index, node){
 
@@ -65,58 +64,74 @@
 
             if (index == startPoint) {
                 node.weight = 0;
-                node.visited = true;
             } else {
                 node.weight = Infinity;
-                node.visited = false; 
             }
+            curNode = startPoint;
+            node.visited = false; 
         });
-
-
-        // function to find lowest weight
-        function findMinWeight() {
-            minWeight = Infinity;
+        var path = [];
+        function dijkstra() {
             
-            $.each(graph.nodes, function(index, node){
-                if (minWeight > node.weight) {
-                    minWeight = node.weight;
-                    minWeightNode = index;
+            // find node with the smallest weight
+            var minWeight = Infinity;
+            $.each(graph.nodes, function(index, node){ 
+                if(node.visited == false) {
+                    if (minWeight > node.weight) {
+                            minWeight = node.weight;
+                            minWeightNode = index;
+                    }       
                 }
-            
             });
-            return minWeightNode;
+            
+            // assign the smallest weight node name to curNode
+            curNode = minWeightNode;
+            path.push(curNode);
+            
+            //console.log(curNode);
+            // add curNode to visited
+            graph.nodes[curNode].visited = true;
+            
+            // cycle through the edges attached to the min node
+            $.each(graph.nodes[curNode].outEdges, function(edge) {
+
+                    // evalNode: the node that's on the other end of the edge -- its value will be evaluated and potentially changed  
+        
+
+                    if (graph.edges[edge].startNode.visited == false) {
+                        evalNode = graph.edges[edge].startNode;
+                    } else {
+                        
+                        evalNode = graph.edges[edge].endNode;
+                        
+                    }
+
+                   //console.log(graph.nodes[evalNode].weight);
+                    // edge length + current node weight
+                    var proposedWeight = graph.nodes[curNode].weight + graph.edges[edge].edgeLength; 
+
+                    // if the evalNode has not been visited and has a higher weight than proposed weight, its weight will be changed to the proposed weight
+                    
+                        if (graph.nodes[evalNode].weight > proposedWeight) {
+                            graph.nodes[evalNode].weight = proposedWeight;
+                        }
+                    
+               //console.log("still thinking...");
+
+            });
         }
 
-        var curNode = findMinWeight(); // store the min node's name
+    while(curNode != endPoint) {
+        dijkstra();
+    }  
+console.log(path);
+    $.each(graph.nodes, function(index, node){
 
-        // cycle through the edges attached to the min node
-        $.each(graph.nodes[curNode].outEdges, function(edge) {
-
-            // evalNode: the node that's on the other end of the edge -- its value will be evaluated and potentially changed
-            
-            if (graph.edges[edge].startNode != curNode) {
-                evalNode = graph.edges[edge].startNode;
-            } else {
-                if (typeof graph.edges[edge].endNode !== "undefined") {
-                    evalNode = graph.edges[edge].endNode;
-                }
-            }
-            
-            // edge length + current node weight
-            var proposedWeight = graph.nodes[curNode].weight + graph.edges[edge].edgeLength; 
-            
-            console.log(evalNode + " - current weight: " + graph.nodes[evalNode].weight);
-            console.log(evalNode + " - proposed weight: " + proposedWeight);
-
-            // if the evalNode has not been visited and has a higher weight than proposed weight, its weight will be changed to the proposed weight
-            if(graph.nodes[evalNode].visited == false) {
-                if (graph.nodes[evalNode].weight > proposedWeight) {
-                    graph.nodes[evalNode].weight = proposedWeight;
-                }
-            }
-            console.log(evalNode + " - new weight: " + graph.nodes[evalNode].weight);
+            console.log(index + ":     " + node.weight);
         });
-
+    //console.log("done!")
+    //console.log(curNode);
+       
   });
     </script>
 </body>
