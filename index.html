@@ -43,6 +43,29 @@ if mouse is double-clicked in map: make a circle,
 
 */
 $( document ).ready(function() {
+
+jQuery.fn.single_double_click = function(single_click_callback, double_click_callback, timeout) {
+  return this.each(function(){
+    var clicks = 0, self = this;
+    jQuery(this).click(function(event){
+      clicks++;
+      if (clicks == 1) {
+        setTimeout(function(){
+          if(clicks == 1) {
+            single_click_callback.call(self, event);
+          } else {
+            double_click_callback.call(self, event);
+          }
+          clicks = 0;
+        }, timeout || 300);
+      }
+    });
+  });
+}
+
+
+
+
   	var imageurl = "metmap_fl1.png";
   	var srcWidth = 3214;
   	var srcHeight = 2142;
@@ -51,6 +74,10 @@ $( document ).ready(function() {
 
   	var imageWidth = srcWidth * imageScale;
   	var imageHeight = srcHeight * imageScale;
+
+
+  	var mouseoverColor = "lightgreen";
+  	var selectedColor= "blue";
 
   	var paper;
 
@@ -69,6 +96,7 @@ $( document ).ready(function() {
 	var papermapimage;
   	
 	var mode = "circlecreating"; // linedrawing , circledragging, circlecreating
+	$("#mode").text("circlecreating");
 
 	var currentCircle = false;
 	var selectedCircle = false;
@@ -190,6 +218,9 @@ $( document ).ready(function() {
 	  			clearGraph();
 	  			setupPaperImage(imageurl);
 	  			loadGraph(rdata);
+	  			$("#graphFilename").val(filename);
+
+
 	  		},
 
 	  		error : function(jqXHR, status, message){
@@ -200,6 +231,75 @@ $( document ).ready(function() {
 		});	
 
 	}
+
+
+	function mapElemClicked(evt){
+
+		if(mouseOverCircle){
+			circleClicked(evt, mouseOverCircle);
+			return;
+		}
+
+
+	    if (evt.stopPropagation) {
+	      evt.stopPropagation();
+	    }
+	    //IE8 and Lower
+	    else {
+	      evt.cancelBubble = true;
+	    }			
+
+	    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
+	    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
+
+	    if(mode == "linedrawing"){
+	    	// create new circle, end line at new circle, start new line at circle
+	    	circle = createCircle(x,y);
+	    	endLine(circle);
+	    	startLine(circle);
+		}
+
+	}
+
+	function mapElemDblClicked(evt){
+
+		if(mouseOverCircle){
+			circleDblClicked(evt, mouseOverCircle);
+			return;
+		}
+
+	    if (evt.stopPropagation) {
+	      evt.stopPropagation();
+	    }
+	    //IE8 and Lower
+	    else {
+	      evt.cancelBubble = true;
+	    }
+
+
+	    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
+	    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
+		if(mode == "circlecreating"){
+			// start drawing mode
+			$("#mode").text("linedrawing");
+
+			unsetSelectedCircle();
+			var circle = createCircle(x,y);
+			startLine(circle);
+			mode = "linedrawing";
+		}else if(mode == "linedrawing"){
+			unsetSelectedCircle();
+			var circle = createCircle(x,y);
+			endLine(circle);
+			// end linedrawing mode, go back to circlecreating mode 
+			mode = "circlecreating";
+			$("#mode").text("circlecreating");
+
+		}
+
+
+	}
+
 
 	function setupPaperImage(imageurl){
 
@@ -214,38 +314,10 @@ $( document ).ready(function() {
 			// switched to using corresponding events on #mapelem div
 		});
 
-		$("#mapelem").dblclick(function(evt){
 
-		    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
-		    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
-			if(mode == "circlecreating"){
-				// start drawing mode
-				mode = "linedrawing";
-				unsetSelectedCircle();
-				var circle = createCircle(x,y);
-				startLine(circle);
-			}else if(mode == "linedrawing"){
-				unsetSelectedCircle();
-				var circle = createCircle(x,y);
-				endLine(circle);
-				// end linedrawing mode, go back to circlecreating mode 
-				mode = "circlecreating";
-			}
-
-
-		});
-		$("#mapelem").click(function(evt){
-
-		    var x  = (evt.offsetX || evt.clientX - $(evt.target).offset().left);
-		    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
-
-		    if(mode == "linedrawing"){
-		    	// create new circle, end line at new circle, start new line at circle
-		    	circle = createCircle(x,y);
-		    	endLine(circle);
-		    	startLine(circle);
-			}
-		});
+		$("#mapelem").single_double_click(
+			function(evt){ mapElemClicked(evt);},
+			function(evt){ mapElemDblClicked(evt);}, 300);
 
 		$(window).keypress(function (evt){
 	       	if(evt.charCode == 100 && selectedCircle && !editfocus){ 
@@ -277,6 +349,7 @@ $( document ).ready(function() {
 	function clearGraph(){
 		// ikes, this doesn't seem to work yet...
 		paper.clear();
+		$("#mapelem").unbind();
 /*
 		paper.forEach(function(elem){
 			console.log(elem);
@@ -290,10 +363,6 @@ $( document ).ready(function() {
 	function loadGraph(graph){
 		$.each(graph.nodes, function(index, node){
 			var circle = createCircle(node.x, node.y);
-			console.log(circle.data("lines"));
-			console.log(circle.data());
-			console.log(circle.data("lines"));
-			console.log(circle.data("linesx"));
 			$.each(node, function(index, value){
 				circle.data(index, value);
 			});
@@ -309,7 +378,6 @@ $( document ).ready(function() {
 			line.id = startCircle.id + ":" + endCircle.id;
 			line.data("startCircle", startCircle);
 			line.data("endCircle", endCircle);
-			console.log(startCircle.data());
 			startCircle.data("lines").push(line);
 			endCircle.data("lines").push(line);
 			$.each(edge, function(index, value){
@@ -318,6 +386,62 @@ $( document ).ready(function() {
 		});
 
 	}
+
+	function circleClicked(evt, circle){
+
+	    if (evt.stopPropagation) {
+	      evt.stopPropagation();
+	    }
+	    //IE8 and Lower
+	    else {
+	      evt.cancelBubble = true;
+	    }
+
+		// click to select circle
+		if(mode == "linedrawing"){
+			if(currentCircle != circle){
+				unsetSelectedCircle();
+				endLine(circle);
+				currentCircle = circle;
+				startLine(circle);
+			}
+		}else if (mode == "circlecreating"){
+			// circle is selected
+			unsetSelectedCircle();
+			setSelectedCircle(circle);
+		}
+		selectedCircle = circle;		
+	}
+
+	function circleDblClicked(evt, circle){
+
+		   //IE9 & Other Browsers
+	    if (evt.stopPropagation) {
+	      evt.stopPropagation();
+	    }
+	    //IE8 and Lower
+	    else {
+	      evt.cancelBubble = true;
+	    }
+		// dblclick to start drawing mode.
+		if(mode == "linedrawing" && circle == currentCircle){
+			// end drawing mode, destroy current line
+			unsetSelectedCircle();
+			destroyLine(currentLine);
+			mode = "circlecreating";
+			$("#mode").text("circlecreating");
+
+		}else{
+			unsetSelectedCircle();
+			mode = "linedrawing";
+			$("#mode").text("linedrawing");
+
+			currentCircle = circle;
+			startLine(currentCircle);
+		}
+	}
+
+	var mouseOverCircle = false;
 
 	function createCircle(x, y){
 		// make a circle
@@ -333,68 +457,19 @@ $( document ).ready(function() {
 		circle.attr("stroke-width",1);
 		circle.attr("fill", "#5f5");
 		circle.attr("fill-opacity",".2");
-		circle.click(function(evt2){
-		    if (evt2.stopPropagation) {
-		    	console.log("no propagate");
-		      evt2.stopPropagation();
-		    }
-		    //IE8 and Lower
-		    else {
-		    	console.log("no propagate");
-		      evt2.cancelBubble = true;
-		    }
-
-
-			// click to select circle
-			if(mode == "linedrawing"){
-				if(currentCircle != this){
-					unsetSelectedCircle();
-					endLine(this);
-					currentCircle = this;
-					startLine(this);
-				}
-			}else if (mode == "circlecreating"){
-				// circle is selected
-				unsetSelectedCircle();
-				setSelectedCircle(this);
-			}
-			selectedCircle = this;
-		});
-		circle.dblclick(function(evt3){
-
-			   //IE9 & Other Browsers
-		    if (evt3.stopPropagation) {
-		      evt3.stopPropagation();
-		    }
-		    //IE8 and Lower
-		    else {
-		      evt3.cancelBubble = true;
-		    }
-			// dblclick to start drawing mode.
-			if(mode == "linedrawing" && this == currentCircle){
-				// end drawing mode, destroy current line
-				unsetSelectedCircle();
-				destroyLine(currentLine);
-				mode = "circlecreating";
-			}else{
-				unsetSelectedCircle();
-				mode = "linedrawing";
-				currentCircle = this;
-				startLine(currentCircle);
-			}
-
-		});
 
 		circle.mouseover(function(evt){
-			if(this != selectedCircle){
-				this.attr("stroke","#0f0");
+			mouseOverCircle = circle;
+			if(circle != selectedCircle){
+				this.attr("stroke",mouseoverColor);
 				this.attr("stroke-width",3);
-				this.attr("fill", "#f5f");
+				this.attr("fill", mouseoverColor);
 				this.attr("fill-opacity",".4");
 			}
 		});
 		circle.mouseout(function(evt){
-			if (this != selectedCircle){
+			mouseOverCircle = false;
+			if (circle != selectedCircle){
 				this.attr("stroke","#f00");
 				this.attr("stroke-width",1);
 				this.attr("fill", "#5f5");
@@ -456,13 +531,9 @@ $( document ).ready(function() {
 
 			var pathString;
 			if(circle == line.data("startCircle")){
-
 			    line.attr("path", [["M",newX,newY],["L",ex,ey]]);
-
 			}else {
-
 			    line.attr("path", [["M",sx,sy],["L",newX,newY]]);
-
 			}
 		});
 	}
@@ -473,7 +544,7 @@ $( document ).ready(function() {
 		var line = paper.path(pathString);
 
 		line.attr("stroke","#000");
-		line.attr("stroke-width",1);
+		line.attr("stroke-width",3);
 
 		line.click(function(evt){
 			if(mode == "circlecreating"){
@@ -484,8 +555,8 @@ $( document ).ready(function() {
 		line.mouseover(function(){
 			if(mode == "circlecreating"){
 				if(line != selectedLine){
-					this.attr("stroke-width", 2);
-					this.attr("stroke", "#00f");
+					this.attr("stroke-width", 5);
+					this.attr("stroke", mouseoverColor);
 				}
 			}
 		});
@@ -493,7 +564,7 @@ $( document ).ready(function() {
 			if(mode == "circlecreating"){
 				if(line != selectedLine){
 					line.attr("stroke","#000");
-					line.attr("stroke-width",1);		
+					line.attr("stroke-width",3);		
 				}	
 			}
 		});
@@ -532,15 +603,14 @@ $( document ).ready(function() {
 			circle.data("lines").push(currentLine);
 			currentLine = false;
 		}
-
 	}
 
 	function setSelectedCircle(circle){
 		unsetSelectedLine();
 		selectedCircle = circle;
-		selectedCircle.attr("stroke","#00f");
+		selectedCircle.attr("stroke", selectedColor);
 		selectedCircle.attr("stroke-width",4);
-		selectedCircle.attr("fill", "#f5f");
+		selectedCircle.attr("fill", selectedColor);
 		selectedCircle.attr("fill-opacity",".4");
 
 
@@ -595,8 +665,8 @@ $( document ).ready(function() {
 		unsetSelectedCircle();
 		unsetSelectedLine();
 
-		line.attr("stroke","#0f0");
-		line.attr("stroke-width",2);
+		line.attr("stroke",selectedColor);
+		line.attr("stroke-width",3);
 
 		selectedLine = line;
 
@@ -631,7 +701,7 @@ $( document ).ready(function() {
 
 		if(selectedLine){
 			selectedLine.attr("stroke","#000");
-			selectedLine.attr("stroke-width",1);
+			selectedLine.attr("stroke-width",3);
 			selectedLine = false;
 		}
 	}
@@ -641,7 +711,7 @@ $( document ).ready(function() {
 			destroyLine(line);
 		});
 		if(circle == selectedCircle){
-			unsetSelectedLine();
+			unsetSelectedCircle();
 		}
 		circle.remove();
 	}
@@ -716,6 +786,7 @@ $( document ).ready(function() {
 <!--        <span id="save" >Save Graph</span> -->
 
       <ul class="nav navbar-nav navbar-right">
+      	<li><span id="mode"></span></li>
       	<li><div class="form-group">
           <input id="graphFilename" type="text" class="form-control" placeholder="Filename">
       	</div>
