@@ -125,7 +125,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 	      evt.cancelBubble = true;
 	    }
 
-		var data = {nodes : {}, edges : {}};
+		var data = {image_height : imageHeight, imageWidth : imageWidth,  nodes : {}, edges : {}};
+
 		paper.forEach(function(elem){
 			console.log(elem);
 			if(elem.type == "circle"){
@@ -135,7 +136,9 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 				console.log("circle " + name);
 				var ndata = {x : x, 
 					y: y,
-					lightlevel : elem.data("lightlevel")
+					lightlevel : elem.data("lightlevel"),
+					noiselevel : elem.data("noise"),
+					crowdlevel : elem.data("crowdlevel"),
 				};
 				data.nodes[name] = ndata;
 			}else if(elem.type == "path"){
@@ -625,15 +628,36 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 				circle.data("gallery", $(this).val());
 			}).val(circle.data("gallery"));
 		
-		var select = $("<span>Light Level:</span><select name='lightlevel'><BR>").appendTo(form);
-		select.append("<option value=''>Select Light Level...</option>")
-		select.append("<option value='low'>low</option>")
+		var lightSelect = $("<span>Light Level:</span><select name='lightlevel'><BR>").appendTo(form);
+		lightSelect.append("<option value=''>Select Light Level...</option>")
+		lightSelect.append("<option value='low'>low</option>")
 		.append("<option value='medium'>medium</option>")
 		.append("<option value='high'>high</option>")
 		.bind('change', function(evt){
 			console.log($(this).val());
 			circle.data("lightlevel", $(this). val());
 		}).val(circle.data("lightlevel"));
+
+		var crowdSelect = $("<span>Crowd Level:</span><select name='crowdlevel'><BR>").appendTo(form);
+		crowdSelect.append("<option value=''>Select Crowd Level...</option>")
+		crowdSelect.append("<option value='low'>low</option>")
+		.append("<option value='medium'>medium</option>")
+		.append("<option value='high'>high</option>")
+		.bind('change', function(evt){
+			console.log($(this).val());
+			circle.data("crowdlevel", $(this). val());
+		}).val(circle.data("crowdlevel"));
+
+		var noiseSelect = $("<span>Crowd Level:</span><select name='noiselevel'><BR>").appendTo(form);
+		noiseSelect.append("<option value=''>Select Noise Level...</option>")
+		noiseSelect.append("<option value='low'>low</option>")
+		.append("<option value='medium'>medium</option>")
+		.append("<option value='high'>high</option>")
+		.bind('change', function(evt){
+			console.log($(this).val());
+			circle.data("noiselevel", $(this). val());
+		}).val(circle.data("noiselevel"));
+
 
 
 		$(":input" ,form).focus(function(){
