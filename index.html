@@ -44,6 +44,8 @@ if mouse is double-clicked in map: make a circle,
 */
 $( document ).ready(function() {
 
+	var doubleclickTimeout = 300;
+
 jQuery.fn.single_double_click = function(single_click_callback, double_click_callback, timeout) {
   return this.each(function(){
     var clicks = 0, self = this;
@@ -57,7 +59,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
             double_click_callback.call(self, event);
           }
           clicks = 0;
-        }, timeout || 300);
+        }, timeout || doubleclickTimeout);
       }
     });
   });
@@ -267,10 +269,11 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 	function mapElemDblClicked(evt){
 
 		if(mouseOverCircle){
+			console.log("circleDblClicked");
 			circleDblClicked(evt, mouseOverCircle);
 			return;
 		}
-
+		console.log("mapElemDblClick");
 	    if (evt.stopPropagation) {
 	      evt.stopPropagation();
 	    }
@@ -320,7 +323,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 
 		$("#mapelem").single_double_click(
 			function(evt){ mapElemClicked(evt);},
-			function(evt){ mapElemDblClicked(evt);}, 300);
+			function(evt){ mapElemDblClicked(evt);}, doubleclickTimeout);
 
 		$(window).keypress(function (evt){
 	       	if(evt.charCode == 100 && selectedCircle && !editfocus){ 
@@ -431,6 +434,12 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			// end drawing mode, destroy current line
 			unsetSelectedCircle();
 			destroyLine(currentLine);
+			mode = "circlecreating";
+			$("#mode").text("circlecreating");
+
+		}else if (mode == "linedrawing" ){
+			unsetSelectedCircle();
+			endLine(circle);
 			mode = "circlecreating";
 			$("#mode").text("circlecreating");
 
@@ -731,6 +740,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 	}
 
 	function destroyCircle(circle){
+
+
 		$.each(circle.data("lines"), function(index, line){
 			destroyLine(line);
 		});
@@ -756,11 +767,18 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		if(!line){
 			return;
 		}
-		var startIndexToRemove;
+
+		// the problem is, when the line is destroyed, the endCircle is detached from 
+		// all its lines.
+
+		var startIndexToRemove = false;
+		var endIndexToRemove = false;
 		if(line.data("startCircle")){
 			$.each(line.data("startCircle").data("lines"), function (index, itsLine){
 			if(itsLine == line){
 					startIndexToRemove = index;
+					console.log("start :"+ startIndexToRemove);
+					delete line.data("startCircle").data("lines")[index];
 				}
 			});
 		}
@@ -769,18 +787,26 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			$.each(line.data("endCircle").data("lines"), function (index, itsLine){
 				if(itsLine == line){
 					endIndexToRemove = index;
+					console.log("end : " + endIndexToRemove);
+					delete line.data("endCircle").data("lines")[index];
+
 				}
 			});
 		}
+
+		/*
 		if(endIndexToRemove){
 			var lines = line.data("endCircle").data("lines");
+			// the cirle the line is attached to at the "end"
 			delete lines[endIndexToRemove];
 		}
 
 		if(startIndexToRemove){
 			var lines = line.data("startCircle").data("lines");
+			// the circle the line is attached to at the "start"
 			delete lines[startIndexToRemove];
 		}
+		*/
 
 	}
 
