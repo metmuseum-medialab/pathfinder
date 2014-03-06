@@ -269,11 +269,9 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 	function mapElemDblClicked(evt){
 
 		if(mouseOverCircle){
-			console.log("circleDblClicked");
 			circleDblClicked(evt, mouseOverCircle);
 			return;
 		}
-		console.log("mapElemDblClick");
 	    if (evt.stopPropagation) {
 	      evt.stopPropagation();
 	    }
