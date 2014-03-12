@@ -164,23 +164,29 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			}
 		});
 		// save data to server
-		var ajax_data = {graph: JSON.stringify(data), filename: filename};
+//		var ajax_data = {graph: JSON.stringify(data), filename: filename};
+		var ajax_data = {graph: data, filename: filename};
 		$.ajax({
 			url : "?action=savegraph" ,
-			data : ajax_data,
-			contentType : 'application/json',
+			data : JSON.stringify(ajax_data),
+			type : "PUT",
+		//	processData : false,
+			contentType : 'json',
 	  		success : function(rdata, status){
 	  			console.log("success");
 	  			console.log(rdata.filename);
 	  			$("#graphFilename").val(rdata.filename);
 
 	  			loadGraphList();
+
+	  			alert("graph saved!");
 	  		},
 
 	  		error : function(jqXHR, status, message){
 	  			console.log("error ");
 	  			console.log(status);
 	  			console.log(message);
+	  			alert("save error!" + message);
 	  		}
 		});		
 		return false;
@@ -370,7 +376,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			$.each(node, function(index, value){
 				circle.data(index, value);
 			});
-			console.log(circle.data());
+		//	console.log(circle.data());
 
 		});
 

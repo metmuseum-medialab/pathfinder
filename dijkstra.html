@@ -2,137 +2,163 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>dijkstra v1</title>
+    <title>Pathfinder MVP 1</title>
+
+    <div id="placeholder"></div>
+    <!-- <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script> -->
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script src="js/jquery-1.11.0.min.js"></script>
+
+    <script src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/raphael-min.js"></script>
+    <script src="js/dijkstra.js"> </script>
+    <script language='javascript'>
+        $( document ).ready(function() {
+           
+           // map vars
+            var imageurl = "metmap_fl1.png";
+            
+            var srcWidth = 3214;
+            var srcHeight = 2142;
+            var imageScale = .3;
+            var imageWidth = srcWidth * imageScale;
+            var imageHeight = srcHeight * imageScale;
+            var paper; // "canvas"
+            
+            var selection = [];
+
+            var circ1_on = false;
+            var circ2_on = false;
+            var circ1_name, circ2_name;
+            
+            $("#mapelem").height(imageHeight).width(imageWidth);
+
+            Raphael("mapelem", imageWidth, imageHeight, function(
+                text){
+                paper = this; //this is valid within this functiom
+                papermapimage = paper.image(imageurl, 0,0, imageWidth, imageHeight);
+
+                // Draw circles that a user can click on to choose start and end point
+
+                $.getJSON('data/floor_1.json ', function(graph) {
+                    $.each(graph.nodes, function(index, node) {
+
+                        var circleDraw = paper.circle(node.x, node.y, 5);
+                        var circleClicked = false;
+
+                        circleDraw.id  = index;
+                        circleDraw.attr("stroke","black");
+                        circleDraw.attr("stroke-width",1);
+                        circleDraw.attr("fill", "white");
+                        circleDraw.attr("fill-opacity",".2");
+
+                            // make the circle react to rollover
+                            
+                                circleDraw.click(function(evt){
+
+                                    if (circleClicked == false) {
+                                        this.attr("fill", "#73c21f");
+                                        this.attr("fill-opacity", "1");
+                                        circleClicked = true;
+                                        if (circ1_on == false) {
+                                            circ1_on = true;
+                                            circ1_name = this.id;
+                                        } else if (circ2_on == false) {
+                                            circ2_on = true;
+                                            circ2_name = this.id;
+                                            dijkstraCalc(circ1_name, circ2_name, function(pathNodes, pathEdges){
+                                                drawPath(pathNodes, pathEdges);
+                                            });
+                                        } 
+                                        selection.push(this.id);
+                                    } else {
+                                        this.attr("fill", "white");
+                                        this.attr("fill-opacity", ".3");
+                                        circleClicked = false;
+                                    }
+                                    console.log(selection);
+                                });
+                                
+                                circleDraw.mouseover(function(evt){
+                                    if (circleClicked == false) {
+                                        this.attr("fill", "#eb603b");
+                                        this.attr("fill-opacity", ".7");
+                                    }
+                                });
+
+                                circleDraw.mouseout(function(evt){
+                                    if (circleClicked == false) {
+                                        this.attr("fill", "white");
+                                        this.attr("fill-opacity", ".3");
+                                    }
+                                });
+                    });
+                });
+
+                
+                /*
+                dijkstraCalc(c1, c2, function(pathNodes, pathEdges){
+                    drawPath(pathNodes, pathEdges);
+                });*/
+            });
+            
+            function drawPath(pathNodes, pathEdges) {
+                
+
+                // make circles
+                $.each(pathNodes, function(node) {
+                    var circle = paper.circle(pathNodes[node].x,pathNodes[node].y, 5);
+
+                        circle.id  = node;
+                        circle.attr("stroke","#f00");
+                        circle.attr("stroke-width",1);
+                        circle.attr("fill", "#5f5");
+                        circle.attr("fill-opacity",".2");
+                });
+
+                // make lines
+                $.each(pathEdges, function(edge) {
+
+                    var pathString = "M"+pathEdges[edge].sx+","+pathEdges[edge].sy+"L"+pathEdges[edge].ex+","+pathEdges[edge].ey;
+                    var line = paper.path(pathString);
+                    line.attr("stroke","#000");
+                    line.attr("stroke-width",1);
+                });
+            } 
+        });
+   </script>
+
 </head>
 <body>
-    <div id="placeholder"></div>
-    <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
-    <script>
-  
-    $.getJSON('data/GrecoRoman.json', function(graph) {
-        
-        // FUNCTION TO CLEAN UP DATA AND DELETE "stuff"
-        $.each(graph.edges, function(index, edge){
-            if(edge.endNode == "undefined_undefined"){
+<nav class="navbar navbar-default" role="navigation">
+ <div class="container-fluid">
+  <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">PathFinder MVP 1</a>
+    </div>
+</nav>  
 
-                delete graph.edges[index];
-            }
-        });
+    <div class="container-fluid" width="100%" >
 
-        // $.each is a jquery function that iterates over any collection (of objects or arrays)
-        // "index" is the name of the object
-        // "edge" is a var
 
-        $.each(graph.edges, function(index, edge){
-        
-                var startNodeName = edge.startNode;
-                var endNodeName = edge.endNode;
-                
-                var startNode = graph.nodes[startNodeName];
-                var endNode = graph.nodes[endNodeName];
+        <div class="row-fluid" id="mapmetadata">
+            <div class="span2" >
+                <div class="row-fluid"  >
+                    <div class="span12"  id="edit" >
+                        <!-- edit -->
+                    </div>
+                </div>
+            </div>
+            <div class="span10" id="mapelem" ></div>
+        </div>
 
-                // function to calculate edge length
-                var findEdgeLength = function(x0, y0, x1, y1){
-                    return Math.sqrt((x0 -= x1) * x0 + (y0 -= y1) * y0);
-                };
-                
-                // START NODE -- EDGES
-                if (!startNode.outEdges) {
-                    startNode.outEdges = {};
-                }
-                startNode.outEdges[index] = index;
-                
-            
 
-                // END NODE -- EDGES
-                
-                    if (!endNode.outEdges) {
-                        endNode.outEdges = {};
-                    }
-                    endNode.outEdges[index] = index;
-
-                // calculate edge length
-                edge.edgeLength = findEdgeLength(startNode.x, startNode.y, endNode.x, endNode.y);     
-           
-        });   
-  
-        // Assign  initial weight  (0 - Infinity) and visited (true/false) value to nodes
-        $.each(graph.nodes, function(index, node){
-
-            startPoint = "365_550";
-            endPoint = "30_551";
-
-            if (index == startPoint) {
-                node.weight = 0;
-            } else {
-                node.weight = Infinity;
-            }
-            curNode = startPoint;
-            node.visited = false; 
-        });
-        var path = [];
-        function dijkstra() {
-            
-            // find node with the smallest weight
-            var minWeight = Infinity;
-            $.each(graph.nodes, function(index, node){ 
-                if(node.visited == false) {
-                    if (minWeight > node.weight) {
-                            minWeight = node.weight;
-                            minWeightNode = index;
-                    }       
-                }
-            });
-            
-            // assign the smallest weight node name to curNode
-            curNode = minWeightNode;
-            path.push(curNode);
-            
-            //console.log(curNode);
-            // add curNode to visited
-            graph.nodes[curNode].visited = true;
-            
-            // cycle through the edges attached to the min node
-            $.each(graph.nodes[curNode].outEdges, function(edge) {
-
-                    // evalNode: the node that's on the other end of the edge -- its value will be evaluated and potentially changed  
-        
-
-                    if (graph.edges[edge].startNode.visited == false) {
-                        evalNode = graph.edges[edge].startNode;
-                    } else {
-                        
-                        evalNode = graph.edges[edge].endNode;
-                        
-                    }
-
-                   //console.log(graph.nodes[evalNode].weight);
-                    // edge length + current node weight
-                    var proposedWeight = graph.nodes[curNode].weight + graph.edges[edge].edgeLength; 
-
-                    // if the evalNode has not been visited and has a higher weight than proposed weight, its weight will be changed to the proposed weight
-                    
-                        if (graph.nodes[evalNode].weight > proposedWeight) {
-                            graph.nodes[evalNode].weight = proposedWeight;
-                        }
-                    
-               //console.log("still thinking...");
-
-            });
-        }
-
-    while(curNode != endPoint) {
-        dijkstra();
-    }  
-console.log(path);
-    $.each(graph.nodes, function(index, node){
-
-            console.log(index + ":     " + node.weight);
-        });
-    //console.log("done!")
-    //console.log(curNode);
-       
-  });
-    </script>
+    </div>
 </body>
 </html>

@@ -81,55 +81,83 @@ function parseRequest(req, res){
 
 
 function saveGraph(req, res, query){
+  //console.log(JSON.stringify(req));
+
+  /*
   var graph = JSON.parse(query.graph);
   var graphstring = JSON.stringify(graph, null, ' ');
+ */
 
-  var filename; 
-  var dataFilename;
-  var shortname;
-  if(query.filename && query.filename.trim() != ""){
-    filename = query.filename;
-    if(!filename.match(/\.json$/)){
-      filename += ".json";
+
+  var body = '';
+
+  req.addListener('data', function(chunk){
+    console.log('got a chunk');
+    body += chunk;
+  });
+
+  req.addListener('error', function(error){
+    console.error('got a error', error);
+    next(err);
+  });
+
+  req.addListener('end', function(chunk){
+    console.log('ended');
+    if (chunk) {
+      body += chunk;
     }
-    shortname = filename;
-    dataFilename = dataDir + filename;
-  }else{
-    var date = new Date();
-    var datetime = date.getTime();
-    shortname = "graph."+datetime+".json";
-    dataFilename = dataDir + shortname;
 
-  }
+    var data = JSON.parse(body);
 
 
-  console.log("saving");
-  console.log(graph);
+    var filename; 
+    var dataFilename;
+    var shortname;
+    if(data.filename && data.filename.trim() != ""){
+      filename = data.filename;
+      if(!filename.match(/\.json$/)){
+        filename += ".json";
+      }
+      shortname = filename;
+      dataFilename = dataDir + filename;
+    }else{
+      var date = new Date();
+      var datetime = date.getTime();
+      shortname = "graph."+datetime+".json";
+      dataFilename = dataDir + shortname;
 
-  fs.writeFile(dataFilename, graphstring, function (err) {
-    if (err) { 
+    }
+
+
+
+    var graph = data.graph;
+    var graphstring = JSON.stringify(graph);
+
+    fs.writeFile(dataFilename, graphstring, function (err) {
+      if (err) { 
+        var contentType = "application/json";
+        res.writeHead(200, {'Content-Type': contentType});
+
+        res.end(JSON.stringify({result: "bad", message: err}));
+
+        return;
+      };
       var contentType = "application/json";
       res.writeHead(200, {'Content-Type': contentType});
 
-      res.end(JSON.stringify({result: "bad", message: err}));
+      res.end(JSON.stringify({result: "good", filename: shortname}));
 
-      return;
-    };
-    var contentType = "application/json";
-    res.writeHead(200, {'Content-Type': contentType});
+      console.log('data saved to file ' + dataFilename);
+    });    
 
-    res.end(JSON.stringify({result: "good", filename: shortname}));
-
-    console.log('data saved to file ' + dataFilename);
   });
+
 }
 
 
 function getGraphList(req, res, query){
   console.log("getting graph list");
   var filelist = getDataFileList(dataDir, function(list){
-    console.log("got list");
-    console.log(list);
     var contentType = "application/json";
     res.writeHead(200, {'Content-Type': contentType});
 
@@ -140,15 +168,15 @@ function getGraphList(req, res, query){
 
 function getDataFileList(dirname, callback2){
   var filelist = fs.readdirSync(dirname);
-  console.log(filelist);
+
   var newList = {};
   async.eachSeries(filelist, 
     function(file, callback){
-      console.log("file " + file);
+
       newList[file] = {file: file};
       var path = dirname + file;
       newList[file].stat = fs.statSync(path);
-      console.log(newList);
+
       callback();
     },
     function(){
@@ -174,6 +202,9 @@ function loadGraph(req, res, query){
       res.end(JSON.stringify({result: "bad", message: err}));
       return;
     }
+    console.log("data file");
+    console.log(data);
+
     var contentType = "application/json";
     res.writeHead(200, {'Content-Type': contentType});
     res.end(data);

@@ -1,6 +1,5 @@
 // define start and end point — will be user defined
-function dijkstraCalc(callback) {
-    
+function dijkstraCalc(c1, c2 , callback) {
     //GrecoRoman
     //var startPoint = "365_550";
     //var endPoint = "63_551";
@@ -10,8 +9,12 @@ function dijkstraCalc(callback) {
     //var endPoint = "654_357";
 
     //ModernArt
-    var startPoint = "183_142";
-    var endPoint = "46_205";
+    //var startPoint = "183_142";
+    //var endPoint = "46_205";
+
+    //floor_1
+    var startPoint = c1;
+    var endPoint = c2;
 
     var startNode, endNode;
 
@@ -20,7 +23,7 @@ function dijkstraCalc(callback) {
                 return Math.sqrt((x0 -= x1) * x0 + (y0 -= y1) * y0);
             };
 
-    $.getJSON('data/ModernArt.json ', function(graph) {
+    $.getJSON('data/floor_1.json ', function(graph) {
         
         // FUNCTION TO CLEAN UP DATA AND DELETE "stuff"
         $.each(graph.edges, function(index, edge){
