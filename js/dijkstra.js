@@ -18,6 +18,7 @@ function dijkstraCalc(c1, c2 , callback) {
 
     var startNode, endNode;
 
+    var curNode = false;
     
     var findEdgeLength = function(x0, y0, x1, y1){
                 return Math.sqrt((x0 -= x1) * x0 + (y0 -= y1) * y0);
@@ -117,14 +118,15 @@ function dijkstraCalc(c1, c2 , callback) {
             });
         }
 
-    while(curNode != endPoint) {
-        dijkstra();
-    }  
+        while(curNode != endPoint) {
+            console.log("dijkstra");
+            dijkstra();
+        }  
 
-    var pathNode = endPoint;
-    var pathNodes = [];
-    var pathEdges = [];
-    pathEdge = graph.nodes[pathNode].lastEdge;
+        var pathNode = endPoint;
+        var pathNodes = [];
+        var pathEdges = [];
+        pathEdge = graph.nodes[pathNode].lastEdge;
     
     // Trace the path from endPoint to startPoint
 

@@ -67,9 +67,31 @@
                                         } else if (circ2_on == false) {
                                             circ2_on = true;
                                             circ2_name = this.id;
-                                            dijkstraCalc(circ1_name, circ2_name, function(pathNodes, pathEdges){
-                                                drawPath(pathNodes, pathEdges);
-                                            });
+                                            console.log("calling DC");
+                                           // dijkstraCalc(circ1_name, circ2_name, function(pathNodes, pathEdges){
+                                             //   console.log("got DC");
+
+                                            $.ajax({
+                                                url : "?action=dijkstra" ,
+                                                data : {c1 : circ1_name, c2 : circ2_name},
+                                            //  processData : false,
+                                                contentType : 'json',
+                                                success : function(rdata, status){
+                                                    console.log("success");
+                                                    console.log(rdata);
+                                                    drawPath(rdata.nodes, rdata.edges);
+
+                                                },
+
+                                                error : function(jqXHR, status, message){
+                                                    console.log("error ");
+                                                    console.log(status);
+                                                    console.log(message);
+                                                }
+                                            });     
+                            
+                                              //  drawPath(pathNodes, pathEdges);
+//                                            });
                                         } 
                                         selection.push(this.id);
                                     } else {
@@ -99,7 +121,6 @@
                 
                 /*
                 dijkstraCalc(c1, c2, function(pathNodes, pathEdges){
-                    drawPath(pathNodes, pathEdges);
                 });*/
             });
             
