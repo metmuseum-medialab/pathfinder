@@ -8,7 +8,10 @@ testing:
 */
 
 // connect to db,
+var dijkstra = require("./js/dijkstra.js").dijkstra();
+dijkstra.graph_file = "data/floor_1.json";
 
+console.log("checking stuff");
 
 var async = require("async");
 
@@ -49,8 +52,6 @@ function startServer(){
 
   }).listen(port);
   console.log('Server running at port ' + port);
-
-  
 }
 
 
@@ -66,6 +67,15 @@ function parseRequest(req, res){
 
   if(!query.action){
     sendFile(parsed.pathname, query, res);
+  }else if (query.action == "dijkstra"){
+    console.log("calling DijkstraCalc");
+    console.log(dijkstra);
+    dijkstra.dijkstraCalc(query.c1, query.c2, function(nodes, edges){
+      console.log("got nodes and edges");
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({nodes: nodes, edges: edges}));
+
+    });
   }else if (query.action == "savegraph"){
     saveGraph(req, res, query);
   }else if (query.action == "loadgraph"){
@@ -213,7 +223,6 @@ function loadGraph(req, res, query){
   });
 
 }
-
 
 var dataCache = {};
 function sendFile(path, query, res){
