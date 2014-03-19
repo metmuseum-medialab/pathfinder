@@ -64,11 +64,9 @@
                                         if (circ1_on == false) {
                                             circ1_on = true;
                                             circ1_name = this.id;
-                                            console.log("circ1_name: " + circ1_name);
                                         } else if (circ2_on == false) {
                                             circ2_on = true;
                                             circ2_name = this.id;
-                                            console.log("circ2_name: " + circ2_name);
                                             console.log("calling DC");
                                            // dijkstraCalc(circ1_name, circ2_name, function(pathNodes, pathEdges){
                                              //   console.log("got DC");
@@ -80,8 +78,8 @@
                                                 contentType : 'json',
                                                 success : function(rdata, status){
                                                     console.log("success");
-                                                    console.log(rdata.nodes);
-                                                    console.log(rdata.edges);
+                                                    //console.log(rdata.nodes);
+                                                    //console.log(rdata.edges);
                                                     console.log(rdata);
                                                     drawPath(rdata.nodes, rdata.edges);
                                                 },
@@ -102,7 +100,6 @@
                                         this.attr("fill-opacity", ".3");
                                         circleClicked = false;
                                     }
-                                    //console.log(selection);
                                 });
                                 
                                 circleDraw.mouseover(function(evt){

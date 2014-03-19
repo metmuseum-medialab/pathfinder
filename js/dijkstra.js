@@ -7,7 +7,7 @@ function dijkstra(){
 
     // define start and end point — will be user defined
     dijkstraCalc : function (c1, c2 , callback) {
-
+      
       //floor_1
       var startPoint = c1;
       var endPoint = c2;
@@ -16,40 +16,31 @@ function dijkstra(){
 
       var curNode = false;
 
-      console.log("c1", c1);
-      console.log("c2", c2);
+     // console.log("c1", c1);
+     // console.log("c2", c2);
 
-
-      //var filename = 
-      
       var findEdgeLength = function(x0, y0, x1, y1){
                   return Math.sqrt((x0 -= x1) * x0 + (y0 -= y1) * y0);
               };
 
-
       //var stats = fs.statSync('')
 
+      // read the data file (defined in the graph_file var in server.node.js)
       fs.readFile(this.graph_file,  function(err, data) {
 
         if(err){
-          console.log(err);
+          //console.log(err);
         }
-        console.log(data);
+        //console.log(data);
 
         var graph = JSON.parse(data);
 
-        console.log('got graph');
-        // FUNCTION TO CLEAN UP DATA AND DELETE "stuff"
+        // Delete undefined nodes in edges (edge data cleanup)
         $.each(graph.edges, function(index, edge){
           if(edge.endNode == "undefined_undefined"){
-
             delete graph.edges[index];
           }
         });
-          
-        // $.each is a jquery function that iterates over any collection (of objects or arrays)
-        // "index" is the name of the object
-        // "edge" is a var
 
         $.each(graph.edges, function(index, edge){
         
@@ -59,7 +50,7 @@ function dijkstra(){
           startNode = graph.nodes[startNodeName];
           endNode = graph.nodes[endNodeName];
 
-          // function to calculate edge length
+          // Assign outEdges to nodes
           
           // START NODE -- EDGES
           if (!startNode.outEdges) {
@@ -108,34 +99,38 @@ function dijkstra(){
 
           // add curNode to visited
           graph.nodes[curNode].visited = true;
-              
+          
           // cycle through the edges attached to the min node
           $.each(graph.nodes[curNode].outEdges, function(edge) {
 
-            // evalNode: the node that's on the other end of the edge -- its value will be evaluated and potentially changed  
-            if (graph.edges[edge].startNode.visited == false) {
-                evalNode = graph.edges[edge].startNode;
-            } else {
-                evalNode = graph.edges[edge].endNode;
-            }
+            outEdge_sn = graph.edges[edge].startNode;
+            outEdge_en = graph.edges[edge].endNode;
 
             // edge length + current node weight
             var proposedWeight = graph.nodes[curNode].weight + graph.edges[edge].edgeLength; 
 
-            // if the evalNode has not been visited and has a higher weight than proposed weight, its weight will be changed to the proposed weight 
-            if (graph.nodes[evalNode].weight > proposedWeight) {
-                graph.nodes[evalNode].weight = proposedWeight;
-                graph.nodes[evalNode].lastEdge = edge;
+            // evalNode: the node that's on the other end of the edge -- its value will be evaluated and potentially changed  
+            if (graph.nodes[outEdge_sn].visited == false || graph.nodes[outEdge_en].visited == false) {
+              
+              if (outEdge_sn != curNode) {
+                evalNode = graph.edges[edge].startNode;
+              } else {
+                evalNode = graph.edges[edge].endNode;
+              }
+    
+              // if the evalNode has not been visited and has a higher weight than proposed weight, its weight will be changed to the proposed weight 
+              if (graph.nodes[evalNode].weight > proposedWeight) {
+                  graph.nodes[evalNode].weight = proposedWeight;
+                  graph.nodes[evalNode].lastEdge = edge;
+              }
+            } else {
+              true;
             }
+            
           });
         }
         
-        var count = 0;
-
         while(curNode != endPoint) {
-            console.log("dijkstra");
-            console.log(count);
-            count++;
             dijkstra();
         }  
 
@@ -191,7 +186,6 @@ function dijkstra(){
 
         callback(pathNodes, pathEdges);
 
-      
       });
     }
   };
