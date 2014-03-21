@@ -11,8 +11,6 @@ testing:
 var dijkstra = require("./js/dijkstra.js").dijkstra();
 dijkstra.graph_file = "data/floor_1.json";
 
-console.log("checking stuff");
-
 var async = require("async");
 
 var urlparser = require("url");
