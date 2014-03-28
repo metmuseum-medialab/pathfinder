@@ -125,8 +125,8 @@ function dijkstra(){
         }  
 
         var pathNode = endPoint;
-        var pathNodes = [];
-        var pathEdges = [];
+        var path_nodes = {};
+        var path_edges = {};
         pathEdge = graph.nodes[pathNode].lastEdge;
       
         // Trace the path from endPoint to startPoint
@@ -137,27 +137,36 @@ function dijkstra(){
           // ARRAY OF PATH NODES:
 
           // add x and y coordinates to an object
-          var pathNodeCoords = {};
-          pathNodeCoords.x = graph.nodes[pathNode].x;
-          pathNodeCoords.y = graph.nodes[pathNode].y;
+          //var pathNodeCoords = {};
+          //pathNodeCoords.x = graph.nodes[pathNode].x;
+          //pathNodeCoords.y = graph.nodes[pathNode].y;
           
           // push the object to the pathNodes array
-          pathNodes.push(pathNodeCoords);
-          
+          //pathNodes.push(pathNodeCoords);
+
+          path_nodes[pathNode] = {x: graph.nodes[pathNode].x, y: graph.nodes[pathNode].y};
           // ARRAY OF PATH EDGES:
 
           // identify a path edge
           pathEdge = graph.nodes[pathNode].lastEdge;
           
           // create an object for the pathEdges array
-          pathEdgeCoords = {};
-          pathEdgeCoords.sx = graph.edges[pathEdge].sx;
-          pathEdgeCoords.sy = graph.edges[pathEdge].sy;
-          pathEdgeCoords.ex = graph.edges[pathEdge].ex;
-          pathEdgeCoords.ey = graph.edges[pathEdge].ey;
+          //pathEdgeCoords = {};
+          //pathEdgeCoords.sx = graph.edges[pathEdge].sx;
+          //pathEdgeCoords.sy = graph.edges[pathEdge].sy;
+          //pathEdgeCoords.ex = graph.edges[pathEdge].ex;
+          //pathEdgeCoords.ey = graph.edges[pathEdge].ey;
           
           // push the object to the pathEdges array
-          pathEdges.push(pathEdgeCoords);
+          //pathEdges.push(pathEdgeCoords);
+          path_edges[pathEdge] = {
+            sx: graph.edges[pathEdge].sx, 
+            sy: graph.edges[pathEdge].sy,
+            ex: graph.edges[pathEdge].ex,
+            ey: graph.edges[pathEdge].ey,
+            length: graph.edges[pathEdge].edgeLength
+          }
+          
 
           // if the lastEdge does not contain the startPoint
           if(graph.edges[pathEdge].startNode != pathNode) {
@@ -169,14 +178,15 @@ function dijkstra(){
         }
         // push the startPoint node coordinates to the pathNodes array separately
         // after all the lastEdges are found (startPoing doesn't have a lastEdge)    
-        var pathNodeCoords = {};
-        
-        pathNodeCoords.x = graph.nodes[startPoint].x;
-        pathNodeCoords.y = graph.nodes[startPoint].y;
-        
-        pathNodes.push(pathNodeCoords);
+        //var pathNodeCoords = {};
 
-        callback(pathNodes, pathEdges);
+        //pathNodeCoords.x = graph.nodes[startPoint].x;
+        //pathNodeCoords.y = graph.nodes[startPoint].y;
+        
+        //pathNodes.push(pathNodeCoords);
+        path_nodes[pathNode] = {x: graph.nodes[startPoint].x, y: graph.nodes[startPoint].y};
+
+        callback(path_nodes, path_edges);
 
       });
     }

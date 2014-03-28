@@ -13,7 +13,7 @@ function poiPath(){
       var dijkstra = require("./dijkstra_mvp2.js").dijkstra();
       dijkstra.graph_file = "data/floor_1.json";
 
-      var poiPath = {};
+      var poiPerm = {};
 
       poi_set = JSON.parse(poi);
  
@@ -25,19 +25,19 @@ function poiPath(){
       // eachSeries poi_2 cycles through the same poi_set and calls dijkstra to calculate
       // a path between 1st node and any node that is not the same as the 1st node
 
+      //////////////////////////// PERMUTATIONS //////////////////////////////
+
       async.eachSeries(poi_set, function(poi_1, callback_1){
         async.eachSeries(poi_set, function(poi_2, callback_2){
-          if (poi_1 != poi_2) {
-            //console.log("about to run dijkstraCalc");
+          if (poi_2 > poi_1) { // permutate without repetitions
             dijkstra.dijkstraCalc(poi_1, poi_2, function(result_nodes, result_edges){
 
-              poiPath[poi_1 + ":" + poi_2] = {nodes: result_nodes, edges: result_edges};
-              //console.log("inner loop ran once...");
+              poiPerm[poi_1 + ":" + poi_2] = {nodes: result_nodes, edges: result_edges};
               callback_2();
 
             });
           } else {
-            //console.log("inner loop ran once - same point");
+
             callback_2();
           }
 
@@ -46,9 +46,7 @@ function poiPath(){
           if( err ) {
             // One of the iterations produced an error.
             // All processing will now stop.
-            //console.log('error callback_2');
           } else {
-            //console.log('yey! callback_2');
             callback_1();
           }
         });  
@@ -57,21 +55,30 @@ function poiPath(){
         if( err ) {
           // One of the iterations produced an error.
           // All processing will now stop.
-          //console.log('error callback_1');
         } else {
-          //console.log('yey! callback_1');
-          //console.log(JSON.stringify(poiPath, null, " "));
-          //console.log("all loops ran...");
+
+          //console.log(JSON.stringify(poiPerm, null, " "));
          
-         //////////////////////////// POI ALGORITHM //////////////////////////////
+         //////////////////////////// POI PATH ALGORITHM //////////////////////////////
 
-         // NEAREST NEIGHBOR
-
-          $.each(poiPath, function(index, path) {
-            $.each(path.nodes, function(index, nodes) {
-              console.log(index);
+         // Treat each path as an edge by combining all path edges into one edge lenght property: .pathLength
+         $.each(poiPerm, function(index, path) {
+            var lengthSum = 0;
+            $.each(path.edges, function(index, edge) {
+              lengthSum += edge.length;
             });
+            path.pathLength = lengthSum;
+            //console.log(index + ": " + path.pathLength);
           });
+          
+
+         // ANT COLONY OPTIMIZATION
+
+          
+
+          
+        
+
           callback("callback works");
         }
       });
