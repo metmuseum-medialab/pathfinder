@@ -8,7 +8,6 @@ function dijkstra(){
     // define start and end point — will be user defined
     dijkstraCalc : function (c1, c2, callback) {
       console.log("dijkstra_mvp2.js is running...")
-
       
       //floor_1
       var startPoint = c1;
@@ -164,7 +163,9 @@ function dijkstra(){
             sy: graph.edges[pathEdge].sy,
             ex: graph.edges[pathEdge].ex,
             ey: graph.edges[pathEdge].ey,
-            length: graph.edges[pathEdge].edgeLength
+            length: graph.edges[pathEdge].edgeLength,
+            n1: graph.edges[pathEdge].startNode,
+            n2: graph.edges[pathEdge].endNode,
           }
           
 

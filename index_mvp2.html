@@ -28,12 +28,6 @@
             var imageHeight = srcHeight * imageScale;
             var paper; // "canvas"
             
-            var poi_selects = [];
-
-            var circ1_on = false;
-            var circ2_on = false;
-            var circ1_name, circ2_name;
-            
             $("#mapelem").height(imageHeight).width(imageWidth);
 
             Raphael("mapelem", imageWidth, imageHeight, function(
@@ -50,27 +44,30 @@
                         var circleClicked = false;
 
                         circleDraw.id  = index;
-                        circleDraw.attr("stroke","black");
+                        circleDraw.attr("stroke","#575757");
                         circleDraw.attr("stroke-width",1);
                         circleDraw.attr("fill", "white");
-                        circleDraw.attr("fill-opacity",".2");
+                        circleDraw.attr("fill-opacity",".3");
+
+                        poi_set = {};
 
                         // Assign events
-                    
+                        var start = true;
                         circleDraw.click(function(evt){
-
+                            var poi_id = this.id;
+                            
                             if (circleClicked == false) {
                                 this.attr("fill", "#73c21f");
                                 this.attr("fill-opacity", "1");
-                                 circleClicked = true;
-                                 poi_selects.push(this.id);
+                                circleClicked = true;
+                                poi_set[poi_id] = {x: node.x, y: node.y, type: "poi"};
                             } else {
                                 this.attr("fill", "white");
                                 this.attr("fill-opacity", ".3");
                                 circleClicked = false;
-                                var removeNode = poi_selects.indexOf(this.id);
-                                poi_selects.splice(removeNode, 1);
+                                delete poi_set[poi_id];
                             }
+                            console.log(poi_set);
                         });
                         
                         circleDraw.mouseover(function(evt){
@@ -92,16 +89,19 @@
                 
                 $(window).keypress(function (evt){
                     if(evt.charCode == 13){ // 'return' is pressed 
+                        //Add start point (museum entrance)
+                        poi_set["481_599"] = {x: 481, y: 599, type: "start"};
                         // Run the Dijkstra algorithm via server
-                        var myData = JSON.stringify(poi_selects);
+                        var myData = JSON.stringify(poi_set);
                         $.ajax({
                             url : "?action=poiPath" ,
                             data : {poi: myData},
                             //type : "PUT",
                             contentType : 'json',
                             // processData : false,
-                            success : function(testCallback, status){
-                                console.log("poiPath success!");
+                            success : function(poiPath, status){
+                                //console.log(poiPath);
+                                drawPath(poi_set, poiPath);
                             },
 
                             error : function(jqXHR, status, message){
@@ -114,27 +114,30 @@
                 });                
             });
             
-            function drawPath(pathNodes, pathEdges) {
+            function drawPath(poi_set, poiPath) {
                 
 
                 // make circles
-                $.each(pathNodes, function(node) {
-                    var circle = paper.circle(pathNodes[node].x,pathNodes[node].y, 5);
+                $.each(poi_set, function(index, node) {
+                    var circle = paper.circle(node.x, node.y, 5);
 
                         circle.id  = node;
-                        circle.attr("stroke","#f00");
+                        circle.attr("stroke","black");
                         circle.attr("stroke-width",1);
-                        circle.attr("fill", "#5f5");
-                        circle.attr("fill-opacity",".2");
+                        circle.attr("fill", "blue");
+                        circle.attr("fill-opacity","1");
                 });
 
                 // make lines
-                $.each(pathEdges, function(edge) {
+                $.each(poiPath, function(index, path) {
+                    $.each(path, function(index, edge) {
 
-                    var pathString = "M"+pathEdges[edge].sx+","+pathEdges[edge].sy+"L"+pathEdges[edge].ex+","+pathEdges[edge].ey;
-                    var line = paper.path(pathString);
-                    line.attr("stroke","#000");
-                    line.attr("stroke-width",1);
+                        var pathString = "M"+edge.sx+","+edge.sy+"L"+edge.ex+","+edge.ey;
+                        var line = paper.path(pathString);
+                        line.attr("stroke","black");
+                        line.attr("stroke-width",2);
+
+                    });
                 });
             } 
         });

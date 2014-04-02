@@ -11,7 +11,7 @@ testing:
 var dijkstra = require("./js/dijkstra_mvp2.js").dijkstra();
 var poiPath = require("./js/poiPath_mvp2.js").poiPath();
 dijkstra.graph_file = "data/floor_1.json";
-poiPath.graph_file = "data/floor_1.json";
+poiPath.graph_file = "./data/floor_1.json";
 
 var async = require("async");
 
@@ -70,11 +70,10 @@ function parseRequest(req, res){
   }else if (query.action == "poiPath"){
     console.log("calling poiPath");
     
-    poiPath.poiPathCalc(query.poi, function(testCallback){
+    poiPath.poiPathCalc(query.poi, function(poiPath_received){
       console.log("poiPathCalc is running... (server.mvp2.js)");
-      console.log("got test callback");
       res.writeHead(200, {'Content-Type': 'application/json'});
-      res.end(JSON.stringify({test: testCallback}));
+      res.end(JSON.stringify({poiPath: poiPath_received}));
     });
 
   }else if (query.action == "dijkstra"){
