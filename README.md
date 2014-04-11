@@ -11,8 +11,9 @@ initially we are creating the route-creation app, to build the dataset.
 ====================================================================================================
 
 MVP1:
-- Calculates a path form A to B
+Calculates a path form A to B using Dijkstra's weighted graph algorithm
 
 MVP2: 
-- Calculates a path between multiple points (starting at the Met's entrance)
+Calculates a path between multiple points (starting at the Met's entrance) by permutating all the possble paths between all selected points of interest (using the Dijkstra algorithm from MVP1) and then using the Nearest Neighbor algorithm (a heuristic approach to the Travelling Salesman Problem) to choose the best route among all the possible paths.
+
 
