@@ -8,7 +8,7 @@ testing:
 */
 
 // connect to db,
-var dijkstra = require("./js/dijkstra.js").dijkstra();
+var dijkstra = require("./js/dijkstra_mvp1.js").dijkstra();
 dijkstra.graph_file = "data/floor_1.json";
 
 var async = require("async");
@@ -226,7 +226,7 @@ var dataCache = {};
 function sendFile(path, query, res){
 
   if(path == "/"){
-    path = "/index.html";
+    path = "/index_mvp1.html";
   }
   var extname = pathparser.extname(path);
   var contentType = 'text/html';
