@@ -138,6 +138,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 				console.log("circle " + name);
 				var ndata = {x : x, 
 					y: y,
+					nodetype : elem.data("nodetype"),
 					lightlevel : elem.data("lightlevel"),
 					noiselevel : elem.data("noise"),
 					crowdlevel : elem.data("crowdlevel"),
@@ -470,6 +471,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		circle.data("lines", []);
 
 		circle.attr("stroke","#f00");
+		circle.attr("stroke-opacity",".7");
 		circle.attr("stroke-width",1);
 		circle.attr("fill", "#5f5");
 		circle.attr("fill-opacity",".2");
@@ -560,7 +562,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		var line = paper.path(pathString);
 
 		line.attr("stroke","#000");
-		line.attr("stroke-width",3);
+		line.attr("stroke-width",2);
+		line.attr("stroke-opacity",.7);
 
 		line.click(function(evt){
 			if(mode == "circlecreating"){
@@ -641,6 +644,18 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 				circle.data("gallery", $(this).val());
 			}).val(circle.data("gallery"));
 		
+		var nodeTypeSelect = $("<span>Node Type:</span><select name='nodetype'><BR>").appendTo(form);
+		nodeTypeSelect.append("<option value=''>Select Node Type...</option>")
+		nodeTypeSelect.append("<option value='gallery'>gallery</option>")
+		.append("<option value='pass'>pass</option>")
+		.append("<option value='stairs'>stairs</option>")
+		.append("<option value='elevator'>elevator</option>")
+		.append("<option value='wc'>wc</option>")
+		.bind('change', function(evt){
+			console.log($(this).val());
+			circle.data("nodetype", $(this). val());
+		}).val(circle.data("nodetype"));
+		
 		var lightSelect = $("<span>Light Level:</span><select name='lightlevel'><BR>").appendTo(form);
 		lightSelect.append("<option value=''>Select Light Level...</option>")
 		lightSelect.append("<option value='low'>low</option>")
@@ -661,7 +676,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			circle.data("crowdlevel", $(this). val());
 		}).val(circle.data("crowdlevel"));
 
-		var noiseSelect = $("<span>Crowd Level:</span><select name='noiselevel'><BR>").appendTo(form);
+		var noiseSelect = $("<span>Noise Level:</span><select name='noiselevel'><BR>").appendTo(form);
 		noiseSelect.append("<option value=''>Select Noise Level...</option>")
 		noiseSelect.append("<option value='low'>low</option>")
 		.append("<option value='medium'>medium</option>")

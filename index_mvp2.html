@@ -40,49 +40,51 @@
                 $.getJSON('data/floor_1.json ', function(graph) {
                     $.each(graph.nodes, function(index, node) {
 
-                        var circleDraw = paper.circle(node.x, node.y, 5);
-                        var circleClicked = false;
+                        if (node.nodetype == "gallery" || node.nodetype == "wc") { 
 
-                        circleDraw.id  = index;
-                        circleDraw.attr("stroke","#575757");
-                        circleDraw.attr("stroke-width",1);
-                        circleDraw.attr("fill", "white");
-                        circleDraw.attr("fill-opacity",".3");
+                            var circleDraw = paper.circle(node.x, node.y, 5);
+                            var circleClicked = false;
 
-                        poi_set = {};
-
-                        // Assign events
-                        var start = true;
-                        circleDraw.click(function(evt){
-                            var poi_id = this.id;
-                            
-                            if (circleClicked == false) {
-                                this.attr("fill", "#73c21f");
-                                this.attr("fill-opacity", "1");
-                                circleClicked = true;
-                                poi_set[poi_id] = {x: node.x, y: node.y, type: "poi"};
-                            } else {
-                                this.attr("fill", "white");
-                                this.attr("fill-opacity", ".3");
-                                circleClicked = false;
-                                delete poi_set[poi_id];
-                            }
-                            console.log(poi_set);
-                        });
+                            circleDraw.id  = index;
+                            circleDraw.attr("stroke","#808080");
+                            circleDraw.attr("stroke-width",0);
+                            circleDraw.attr("fill", "white");
+                            circleDraw.attr("fill-opacity",".2");
                         
-                        circleDraw.mouseover(function(evt){
-                            if (circleClicked == false) {
-                                this.attr("fill", "#eb603b");
-                                this.attr("fill-opacity", ".7");
-                            }
-                        });
+                            poi_set = {};
 
-                        circleDraw.mouseout(function(evt){
-                            if (circleClicked == false) {
-                                this.attr("fill", "white");
-                                this.attr("fill-opacity", ".3");
-                            }
-                        });
+                            // Assign events
+                            var start = true;
+                            circleDraw.click(function(evt){
+                                var poi_id = this.id;
+                                console.log(graph.nodes[this.id]);
+                                if (circleClicked == false) {
+                                    this.attr("fill", "#73c21f");
+                                    this.attr("fill-opacity", "1");
+                                    circleClicked = true;
+                                    poi_set[poi_id] = {x: node.x, y: node.y, type: "poi"};
+                                } else {
+                                    this.attr("fill", "white");
+                                    this.attr("fill-opacity", ".3");
+                                    circleClicked = false;
+                                    delete poi_set[poi_id];
+                                }
+                            });
+                            
+                            circleDraw.mouseover(function(evt){
+                                if (circleClicked == false) {
+                                    this.attr("fill", "#eb603b");
+                                    this.attr("fill-opacity", ".7");
+                                }
+                            });
+
+                            circleDraw.mouseout(function(evt){
+                                if (circleClicked == false) {
+                                    this.attr("fill", "white");
+                                    this.attr("fill-opacity", ".3");
+                                }
+                            });
+                        }
                     });
                 });
 
@@ -123,7 +125,7 @@
 
                         circle.id  = node;
                         circle.attr("stroke","black");
-                        circle.attr("stroke-width",1);
+                        circle.attr("stroke-width",0);
                         circle.attr("fill", "blue");
                         circle.attr("fill-opacity","1");
                 });
@@ -135,7 +137,7 @@
                         var pathString = "M"+edge.sx+","+edge.sy+"L"+edge.ex+","+edge.ey;
                         var line = paper.path(pathString);
                         line.attr("stroke","black");
-                        line.attr("stroke-width",2);
+                        line.attr("stroke-width",1);
 
                     });
                 });

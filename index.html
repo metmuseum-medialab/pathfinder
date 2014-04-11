@@ -43,78 +43,79 @@
 
                 $.getJSON('data/floor_1.json ', function(graph) {
                     $.each(graph.nodes, function(index, node) {
+                        if (node.nodetype == "gallery" || node.nodetype == "wc") { 
+                            var circleDraw = paper.circle(node.x, node.y, 5);
+                            var circleClicked = false;
 
-                        var circleDraw = paper.circle(node.x, node.y, 5);
-                        var circleClicked = false;
-
-                        circleDraw.id  = index;
-                        circleDraw.attr("stroke","black");
-                        circleDraw.attr("stroke-width",1);
-                        circleDraw.attr("fill", "white");
-                        circleDraw.attr("fill-opacity",".2");
+                            circleDraw.id  = index;
+                            circleDraw.attr("stroke","black");
+                            circleDraw.attr("stroke-width",0);
+                            circleDraw.attr("fill", "white");
+                            circleDraw.attr("fill-opacity",".2");
 
                             // make the circle react to rollover
-                            
-                                circleDraw.click(function(evt){
-
-                                    if (circleClicked == false) {
-                                        this.attr("fill", "#73c21f");
-                                        this.attr("fill-opacity", "1");
-                                        circleClicked = true;
-                                        if (circ1_on == false) {
-                                            circ1_on = true;
-                                            circ1_name = this.id;
-                                        } else if (circ2_on == false) {
-                                            circ2_on = true;
-                                            circ2_name = this.id;
-                                            console.log("calling DC");
-                                           // dijkstraCalc(circ1_name, circ2_name, function(pathNodes, pathEdges){
-                                             //   console.log("got DC");
-
-                                            $.ajax({
-                                                url : "?action=dijkstra" ,
-                                                data : {c1 : circ1_name, c2 : circ2_name},
-                                            //  processData : false,
-                                                contentType : 'json',
-                                                success : function(rdata, status){
-                                                    console.log("success");
-                                                    //console.log(rdata.nodes);
-                                                    //console.log(rdata.edges);
-                                                    console.log(rdata);
-                                                    drawPath(rdata.nodes, rdata.edges);
-                                                },
-
-                                                error : function(jqXHR, status, message){
-                                                    console.log("error ");
-                                                    console.log(status);
-                                                    console.log(message);
-                                                }
-                                            });     
-                            
-                                                //drawPath(pathNodes, pathEdges);
-                                         //});
-                                        } 
-                                       // selection.push(this.id);
-                                    } else {
-                                        this.attr("fill", "white");
-                                        this.attr("fill-opacity", ".3");
-                                        circleClicked = false;
-                                    }
-                                });
                                 
-                                circleDraw.mouseover(function(evt){
-                                    if (circleClicked == false) {
-                                        this.attr("fill", "#eb603b");
-                                        this.attr("fill-opacity", ".7");
-                                    }
-                                });
+                            circleDraw.click(function(evt){
 
-                                circleDraw.mouseout(function(evt){
-                                    if (circleClicked == false) {
-                                        this.attr("fill", "white");
-                                        this.attr("fill-opacity", ".3");
-                                    }
-                                });
+                                if (circleClicked == false) {
+                                    this.attr("fill", "blue");
+                                    this.attr("fill-opacity", "1");
+                                    circleClicked = true;
+                                    if (circ1_on == false) {
+                                        circ1_on = true;
+                                        circ1_name = this.id;
+                                    } else if (circ2_on == false) {
+                                        circ2_on = true;
+                                        circ2_name = this.id;
+                                        console.log("calling DC");
+                                       // dijkstraCalc(circ1_name, circ2_name, function(pathNodes, pathEdges){
+                                         //   console.log("got DC");
+
+                                        $.ajax({
+                                            url : "?action=dijkstra" ,
+                                            data : {c1 : circ1_name, c2 : circ2_name},
+                                        //  processData : false,
+                                            contentType : 'json',
+                                            success : function(rdata, status){
+                                                console.log("success");
+                                                //console.log(rdata.nodes);
+                                                //console.log(rdata.edges);
+                                                console.log(rdata);
+                                                drawPath(rdata.nodes, rdata.edges);
+                                            },
+
+                                            error : function(jqXHR, status, message){
+                                                console.log("error ");
+                                                console.log(status);
+                                                console.log(message);
+                                            }
+                                        });     
+                        
+                                            //drawPath(pathNodes, pathEdges);
+                                     //});
+                                    } 
+                                   // selection.push(this.id);
+                                } else {
+                                    this.attr("fill", "white");
+                                    this.attr("fill-opacity", ".3");
+                                    circleClicked = false;
+                                }
+                            });
+                            
+                            circleDraw.mouseover(function(evt){
+                                if (circleClicked == false) {
+                                    this.attr("fill", "#eb603b");
+                                    this.attr("fill-opacity", ".7");
+                                }
+                            });
+
+                            circleDraw.mouseout(function(evt){
+                                if (circleClicked == false) {
+                                    this.attr("fill", "white");
+                                    this.attr("fill-opacity", ".3");
+                                }
+                            });
+                        }
                     });
                 });
 
