@@ -1,0 +1,286 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Pathfinder MVP 2</title>
+
+    <div id="placeholder"></div>
+    <!-- <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script> -->
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script src="js/jquery-1.11.0.min.js"></script>
+
+    <script src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/raphael-min.js"></script>
+    <script src="js/dijkstra_mvp3.js"> </script>
+    <script language='javascript'>
+        $( document ).ready(function() {
+           
+           // temp values while I figure out how to get user input
+
+            var light_pref = 0; // 0 = don't care; 1 = bright; 2 = dim;
+            var crowd_pref = 0; // 0 = don't care; 1 = low; 2 = high;
+            var noise_pref = 0; // 0 = don't care; 1 = low; 2 = high;
+            
+            var userPrefs = {light: light_pref, crowd: crowd_pref, noise: noise_pref};
+
+           // map vars 
+            var fl1_url = "metmap_fl1.png";
+            var fl1_galleries_url = "metmap_fl1_galleries.png";
+            var fl2_url = "metmap_fl2.png";
+            
+            var imgScale = .3;
+            var padding = 50;
+
+            // floor 1
+            var fl1_srcWidth = 3214; 
+            var fl1_srcHeight = 2142; 
+            var fl1_width = fl1_srcWidth * imgScale;
+            var fl1_height = fl1_srcHeight * imgScale;
+
+            // frloor2
+            var fl2_srcWidth = 3241;
+            var fl2_srcHeight = 1804;
+            var fl2_width = fl2_srcWidth * imgScale;
+            var fl2_height = fl2_srcHeight * imgScale;
+
+            var paper; // "canvas"
+            
+            $("#mapelem").height(fl1_height*2+padding).width(fl1_width);
+
+            Raphael("mapelem", fl1_width, fl1_height*2+padding, function(
+                text){
+                
+                paper = this; //this is valid within this functiom
+                
+                fl1_paperImg = paper.image(fl1_url, 0,0, fl1_width, fl1_height);
+                fl2_paperImg = paper.image(fl2_url, 0,fl1_height+padding, fl2_width, fl2_height);
+                
+                // Draw circles that a user can click on to choose start and end point
+
+                $.getJSON('data/floor_1.json ', function(graph) {
+                    $.each(graph.nodes, function(index, node) {
+
+                        // set up access values
+
+
+                        if (node.nodetype == "gallery" || node.nodetype == "wc") { 
+
+                            var circleDraw = paper.circle(node.x, node.y, 10);
+                            var circleClicked = false;
+
+                            circleDraw.id  = index;
+                            circleDraw.attr("stroke","black");
+                            circleDraw.attr("stroke-width",.7);
+                            circleDraw.attr("fill", "white");
+                            circleDraw.attr("fill-opacity","0");
+                        
+                            poi_set = {};
+
+                            // Assign events
+                            var start = true;
+                            circleDraw.click(function(evt){
+                                var poi_id = this.id;
+                                //console.log(graph.nodes[this.id]);
+                                if (circleClicked == false) {
+                                    this.attr("stroke", "blue");
+                                    this.attr("stroke-width", 3);
+                                    //this.attr("fill", "#73c21f");
+                                    this.attr("fill-opacity", "0");
+                                    circleClicked = true;
+                                    poi_set[poi_id] = {x: node.x, y: node.y, type: "poi"};
+                                } else {
+                                    //this.attr("fill", "white");
+                                    //this.attr("fill-opacity", ".3");
+                                    circleClicked = false;
+                                    delete poi_set[poi_id];
+                                }
+                                console.log(circleDraw);
+                            });
+                            
+                            circleDraw.mouseover(function(evt){
+                                if (circleClicked == false) {
+                                    this.attr("stroke", "#eb603b");
+                                    this.attr("stroke-width", 2);
+                                    //this.attr("fill", "white");
+                                    //this.attr("fill-opacity", ".3");
+                                }
+                            });
+
+                            circleDraw.mouseout(function(evt){
+                                if (circleClicked == false) {
+                                    circleDraw.attr("stroke","black");
+                                circleDraw.attr("stroke-width",.7);
+                                    this.attr("fill", "white");
+                                    this.attr("fill-opacity", "0");
+                                }
+                            });
+                        }
+                    });
+                });
+
+                
+                $(window).keypress(function (evt){
+                    if(evt.charCode == 13){ // 'return' is pressed 
+                        //Add start point (museum entrance)
+                        poi_set["481_599"] = {x: 481, y: 599, type: "start"};
+                        // Run the Dijkstra algorithm via server
+                        var poiData = JSON.stringify(poi_set);
+                        var prefData = JSON.stringify(userPrefs);
+                        //console.log(poiData);
+                        $.ajax({
+                            url : "?action=poiPath" ,
+                            data : {poi: poiData, prefs: prefData},
+                            //type : "PUT",
+                            contentType : 'json',
+                            // processData : false,
+                            success : function(poiPath, status){
+                                console.log("Received poiPath data from server!!!");
+                                drawPath(poi_set, poiPath);
+                            },
+
+                            error : function(jqXHR, status, message){
+                                console.log("poiPath ajax error (index_mvp3.html)");
+                                console.log(status);
+                                console.log(message);
+                            }
+                        });   
+                    }
+                });                
+            
+            });
+            
+            function drawPath(poi_set, poiPath) {
+                console.log("About to draw the path!")
+
+                // make circles
+                /*$.each(poi_set, function(index, node) {
+                    var circle = paper.circle(node.x, node.y, 5);
+
+                        circle.id  = node;
+                        //circle.attr("stroke","black");
+                        //circle.attr("stroke-width",0);
+                        //circle.attr("fill", "blue");
+                        //circle.attr("fill-opacity",".5");
+                });*/
+
+                // make lines
+                $.each(poiPath, function(index, path) {
+                    $.each(path, function(index, edge) {
+
+                        var pathString = "M"+edge.sx+","+edge.sy+"L"+edge.ex+","+edge.ey;
+                        var line = paper.path(pathString);
+                        line.attr("stroke","black");
+                        line.attr("stroke-width",2);
+
+                    });
+                });
+            } 
+        });
+        
+        // Drop down menues for access pref user input
+
+        $("#edit").empty();
+
+
+        var form = $("<form>").appendTo("#edit");
+
+        var lightSelect = $("<span>Light Level:</span><select name='lightlevel'><BR>").appendTo(form);
+        lightSelect.append("<option value=''>Select Light Level...</option>")
+        lightSelect.append("<option value='low'>low</option>")
+        .append("<option value='medium'>medium</option>")
+        .append("<option value='high'>high</option>")
+        .bind('change', function(evt){
+            console.log($(this).val());
+            //userPrefs.light("lightlevel", $(this). val()); 
+        })//.val(userPrefs.light("lightlevel"));
+
+        var crowdSelect = $("<span>Crowd Level:</span><select name='crowdlevel'><BR>").appendTo(form);
+        crowdSelect.append("<option value=''>Select Crowd Level...</option>")
+        crowdSelect.append("<option value='low'>low</option>")
+        .append("<option value='medium'>medium</option>")
+        .append("<option value='high'>high</option>")
+        .bind('change', function(evt){
+            console.log($(this).val());
+            //userPrefs.crowd("crowdlevel", $(this). val());
+        })//.val(userPrefs.crowd("crowdlevel"));
+
+        var noiseSelect = $("<span>Noise Level:</span><select name='noiselevel'><BR>").appendTo(form);
+        noiseSelect.append("<option value=''>Select Noise Level...</option>")
+        noiseSelect.append("<option value='low'>low</option>")
+        .append("<option value='medium'>medium</option>")
+        .append("<option value='high'>high</option>")
+        .bind('change', function(evt){
+            console.log($(this).val());
+            //userPrefs.noise("noiselevel", $(this). val());
+        })//.val(circle.data("noiselevel"));
+
+        $(":input" ,form).focus(function(){
+            editfocus = true;
+        });
+        $(":input" ,form).blur(function(){
+            editfocus = false;
+        });
+
+   </script>
+
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+ <div class="container-fluid">
+  <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">Accessible Wayfinder MVP3</a>
+    </div>
+
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+
+<!--        <span id="save" >Save Graph</span> -->
+
+      <ul class="nav navbar-nav navbar-right">
+        <li><span id="mode"></span></li>
+        <li><div class="form-group">
+          <input id="graphFilename" type="text" class="form-control" placeholder="Filename">
+        </div>
+      </li>
+        <li><a href="#" id="save">Save Graph</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Load Graph<b class="caret"></b></a>
+          <ul class="dropdown-menu" id="load">
+          </ul>
+        </li>
+
+       </ul>       
+    </div>
+
+
+</nav>  
+
+    <div class="container-fluid" width="100%" >
+
+
+        <div class="row-fluid" id="mapmetadata">
+            <div class="span2" >
+                <div class="row-fluid"  >
+                    <div class="span12"  id="edit" >
+                        edit
+                    </div>
+                </div>
+            </div>
+            <div class="span10" id="mapelem" ></div>
+        </div>
+
+
+    </div>
+
+
+
+    </div>
+</body>
+</html>

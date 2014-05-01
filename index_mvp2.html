@@ -102,7 +102,7 @@
                             contentType : 'json',
                             // processData : false,
                             success : function(poiPath, status){
-                                //console.log(poiPath);
+                                console.log("Received poiPath data from server!!!");
                                 drawPath(poi_set, poiPath);
                             },
 
@@ -117,7 +117,7 @@
             });
             
             function drawPath(poi_set, poiPath) {
-                
+                console.log("About to draw the path!")
 
                 // make circles
                 $.each(poi_set, function(index, node) {

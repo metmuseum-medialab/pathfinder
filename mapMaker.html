@@ -140,7 +140,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 					y: y,
 					nodetype : elem.data("nodetype"),
 					lightlevel : elem.data("lightlevel"),
-					noiselevel : elem.data("noise"),
+					noiselevel : elem.data("noiselevel"),
 					crowdlevel : elem.data("crowdlevel"),
 				};
 				data.nodes[name] = ndata;
@@ -641,8 +641,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			.appendTo(form)
 			.bind('input',function(evt){
 				console.log($(this).val());
-				circle.data("gallery", $(this).val());
-			}).val(circle.data("gallery"));
+				circle.data("galnum", $(this).val());
+			}).val(circle.data("galnum"));
 		
 		var nodeTypeSelect = $("<span>Node Type:</span><select name='nodetype'><BR>").appendTo(form);
 		nodeTypeSelect.append("<option value=''>Select Node Type...</option>")
@@ -685,7 +685,6 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			console.log($(this).val());
 			circle.data("noiselevel", $(this). val());
 		}).val(circle.data("noiselevel"));
-
 
 
 		$(":input" ,form).focus(function(){

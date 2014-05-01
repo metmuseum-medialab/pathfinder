@@ -6,8 +6,7 @@ function dijkstra(){
     graph_file : false,
 
     // define start and end point — will be user defined
-    dijkstraCalc : function (c1, c2, callback) {
-      console.log("dijkstraCalc started...");
+    dijkstraCalc : function (c1, c2, prefs, callback) {
       
       //floor_1
       var startPoint = c1;
@@ -17,9 +16,16 @@ function dijkstra(){
 
       var curNode = false;
 
-      var findEdgeLength = function(x0, y0, x1, y1){
-                  return Math.sqrt((x0 -= x1) * x0 + (y0 -= y1) * y0);
+      var findEdgeLength = function(x0, y0, x1, y1, l, c, n){
+                  return (Math.sqrt((x0 -= x1) * x0 + (y0 -= y1) * y0))*l*c*n;
               };
+
+      var userPrefs = JSON.parse(prefs);
+
+
+      var highPref = 1;
+      var medPref = .5;
+      var lowPref = .1;
 
       // read the data file (defined in the graph_file var in server.node.js)
       fs.readFile(this.graph_file,  function(err, data) {
@@ -31,13 +37,113 @@ function dijkstra(){
 
         var graph = JSON.parse(data);
 
-        $.each(graph.edges, function(index, edge){
+        // if a node doesn't have an access value assigned, create it and assign "medium"
+        // this is a temporary trick, to make the algorithm work while some values might be missing
+
+        $.each(graph.nodes, function(index, node){
+
+          if (!node.lightlevel) {
+            node.lightlevel = "medium";
+          }
+
+          if (!node.noiselevel) {
+            node.noiselevel = "medium";
+          }
+
+          if (!node.crowdlevel) {
+            node.crowdlevel = "medium";
+          }
+
+          node.l = 1;
+          node.c = 2;
+          node.n = 3;
+          // light
+          if (userPrefs.light == 0) {
+            node.l = 1;
+          } else if (userPrefs.light == 1) {
+            if (node.lightlevel == "high") {
+              node.l = highPref;
+            } else if (node.lightlevel == "medium") {
+              node.l = medPref;
+            } else if (node.lightlevel == "low") {
+              node.l = lowPref;
+            }
+          } else if (userPrefs.light == 2) {
+            if (node.lightlevel == "high") {
+              node.l = lowPref;
+            } else if (node.lightlevel == "medium") {
+              node.l = medPref;
+            } else if (node.lightlevel == "low") {
+              node.l = lowPref;
+            }
+          }
+
+          // crowd
+          if (userPrefs.crowd == 0) {
+            node.c = 1;
+          } else if (userPrefs.crowd == 1) {
+            if (node.crowdlevel == "high") {
+              node.c = highPref;
+            } else if (node.crowdlevel == "medium") {
+              node.c = medPref;
+            } else if (node.crowdlevel == "low") {
+              node.c = lowPref;
+            }
+          } else if (userPrefs.crowd == 2) {
+            if (node.crowdlevel == "high") {
+              node.c = lowPref;
+            } else if (node.crowdlevel == "medium") {
+              node.c = medPref;
+            } else if (node.crowdlevel == "low") {
+              node.c = lowPref;
+            }
+          }
+
+
+          // noise
+          if (userPrefs.noise == 0) {
+            node.n = 1;
+          } else if (userPrefs.noise == 1) {
+            if (node.noiselevel == "high") {
+              node.n = highPref;
+            } else if (node.noiselevel == "medium") {
+              node.n = medPref;
+            } else if (node.noiselevel == "low") {
+              node.n = lowPref;
+            }
+          } else if (userPrefs.noise == 2) {
+            if (node.noiselevel == "high") {
+              node.n = lowPref;
+            } else if (node.noiselevel == "medium") {
+              node.n = medPref;
+            } else if (node.noiselevel == "low") {
+              node.n = lowPref;
+            }
+          }
         
+        console.log("node.l");
+        console.log(node.l);
+        console.log("node.c");
+        console.log(node.c);
+        console.log("node.n");
+        console.log(node.n);
+        
+        });
+
+        
+        $.each(graph.edges, function(index, edge){
+         
           startNodeName = edge.startNode;
           endNodeName = edge.endNode;
               
           startNode = graph.nodes[startNodeName];
           endNode = graph.nodes[endNodeName];
+
+
+
+          var l = (startNode.l + endNode.l)/2;
+          var c = (startNode.c + endNode.c)/2;
+          var n = (startNode.n + endNode.n)/2;
 
           // Assign outEdges to nodes
           
@@ -53,8 +159,11 @@ function dijkstra(){
           }
           endNode.outEdges[index] = index;
 
+          // calculate access prefs that skew edge length
+          
+
           // calculate edge length
-          edge.edgeLength = findEdgeLength(startNode.x, startNode.y, endNode.x, endNode.y);     
+          edge.edgeLength = findEdgeLength(startNode.x, startNode.y, endNode.x, endNode.y, l, c, n);     
         });   
     
         // Assign  initial weight  (0 - Infinity) and visited (true/false) value to nodes

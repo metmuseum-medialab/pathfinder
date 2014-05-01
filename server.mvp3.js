@@ -8,8 +8,8 @@ testing:
 */
 
 // connect to db,
-var dijkstra = require("./js/dijkstra_mvp2.js").dijkstra();
-var poiPath = require("./js/poiPath_mvp2.js").poiPath();
+var dijkstra = require("./js/dijkstra_mvp3.js").dijkstra();
+var poiPath = require("./js/poiPath_mvp3.js").poiPath();
 dijkstra.graph_file = "data/floor_1.json";
 poiPath.graph_file = "./data/floor_1.json";
 
@@ -70,9 +70,9 @@ function parseRequest(req, res){
   }else if (query.action == "poiPath"){
     console.log("calling poiPath");
     
-    poiPath.poiPathCalc(query.poi, function(poiPath_received){
+    poiPath.poiPathCalc(query.poi, query.prefs, function(poiPath_received){
       console.log("poiPathCalc is running on the server");
-      console.log(poiPath_received);
+      //console.log(poiPath_received);
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({poiPath: poiPath_received}));
     });
@@ -241,7 +241,7 @@ var dataCache = {};
 function sendFile(path, query, res){
 
   if(path == "/"){
-    path = "/index_mvp2.html";
+    path = "/index_mvp3.html";
   }
   var extname = pathparser.extname(path);
   var contentType = 'text/html';

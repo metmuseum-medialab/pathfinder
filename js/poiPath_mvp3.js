@@ -10,9 +10,11 @@ function poiPath(){
 
     graph_file : false,
 
-    poiPathCalc : function (poi, callback) {
+    poiPathCalc : function (poi, prefs, callback) {
 
-      var dijkstra = require("./dijkstra_mvp2.js").dijkstra();
+      var userPrefs = prefs;
+
+      var dijkstra = require("./dijkstra_mvp3.js").dijkstra();
       dijkstra.graph_file = "data/floor_1.json";
 
       var poiPerm = {};
@@ -54,7 +56,7 @@ function poiPath(){
         async.eachSeries(poi_count, function(poi_2, callback_2){
 
           if (poi_2 > poi_1) { // permutate without repetitions
-            dijkstra.dijkstraCalc(poi_names[poi_1], poi_names[poi_2], function(result_nodes, result_edges){
+            dijkstra.dijkstraCalc(poi_names[poi_1], poi_names[poi_2], userPrefs, function(result_nodes, result_edges){
               
               poiPerm[poi_names[poi_1] + ":" + poi_names[poi_2]] = {nodes: result_nodes, edges: result_edges, n1: poi_names[poi_1], n2: poi_names[poi_2]};
               
