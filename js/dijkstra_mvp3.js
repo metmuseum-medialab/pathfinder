@@ -23,9 +23,9 @@ function dijkstra(){
       var userPrefs = JSON.parse(prefs);
 
 
-      var highPref = 1;
+      var lowPref = 2;
       var medPref = .5;
-      var lowPref = .1;
+      var highPref = .001;
 
       // read the data file (defined in the graph_file var in server.node.js)
       fs.readFile(this.graph_file,  function(err, data) {
@@ -54,9 +54,6 @@ function dijkstra(){
             node.crowdlevel = "medium";
           }
 
-          node.l = 1;
-          node.c = 2;
-          node.n = 3;
           // light
           if (userPrefs.light == 0) {
             node.l = 1;
@@ -74,7 +71,7 @@ function dijkstra(){
             } else if (node.lightlevel == "medium") {
               node.l = medPref;
             } else if (node.lightlevel == "low") {
-              node.l = lowPref;
+              node.l = highPref;
             }
           }
 
@@ -95,7 +92,7 @@ function dijkstra(){
             } else if (node.crowdlevel == "medium") {
               node.c = medPref;
             } else if (node.crowdlevel == "low") {
-              node.c = lowPref;
+              node.c = highPref;
             }
           }
 
@@ -117,7 +114,7 @@ function dijkstra(){
             } else if (node.noiselevel == "medium") {
               node.n = medPref;
             } else if (node.noiselevel == "low") {
-              node.n = lowPref;
+              node.n = highPref;
             }
           }
         

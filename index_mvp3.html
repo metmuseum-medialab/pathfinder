@@ -18,7 +18,7 @@
            
            // temp values while I figure out how to get user input
 
-            var light_pref = 0; // 0 = don't care; 1 = bright; 2 = dim;
+            var light_pref = 1; // 0 = don't care; 1 = bright; 2 = dim;
             var crowd_pref = 0; // 0 = don't care; 1 = low; 2 = high;
             var noise_pref = 0; // 0 = don't care; 1 = low; 2 = high;
             
@@ -26,8 +26,8 @@
 
            // map vars 
             var fl1_url = "metmap_fl1.png";
+            var fl1_L_url = "metmap_fl1_light2.png";
             var fl1_galleries_url = "metmap_fl1_galleries.png";
-            var fl2_url = "metmap_fl2.png";
             
             var imgScale = .3;
             var padding = 50;
@@ -38,26 +38,30 @@
             var fl1_width = fl1_srcWidth * imgScale;
             var fl1_height = fl1_srcHeight * imgScale;
 
-            // frloor2
-            var fl2_srcWidth = 3241;
-            var fl2_srcHeight = 1804;
-            var fl2_width = fl2_srcWidth * imgScale;
-            var fl2_height = fl2_srcHeight * imgScale;
-
             var paper; // "canvas"
             
-            $("#mapelem").height(fl1_height*2+padding).width(fl1_width);
+            $("#mapelem").height(fl1_height).width(fl1_width);
 
-            Raphael("mapelem", fl1_width, fl1_height*2+padding, function(
+            Raphael("mapelem", fl1_width, fl1_height, function(
                 text){
                 
                 paper = this; //this is valid within this functiom
                 
-                fl1_paperImg = paper.image(fl1_url, 0,0, fl1_width, fl1_height);
-                fl2_paperImg = paper.image(fl2_url, 0,fl1_height+padding, fl2_width, fl2_height);
+                fl1_paperImg = paper.image(fl1_L_url, 0,0, fl1_width, fl1_height);
+
+                $(window).keypress(function (evt){
+                    if(evt.charCode == 1){ // 'return' is pressed 
+                        fl1_paperImg = paper.image(fl1_url, 0,0, fl1_width, fl1_height);
+                    } 
+                    if(evt.charCode == 2){ // 'return' is pressed 
+                        fl1_L_paperImg = paper.image(fl1_L_url, 0,0, fl1_width, fl1_height);
+                    } 
+                });                
+
+                //fl2_paperImg = paper.image(fl2_url, 0,fl1_height+padding, fl2_width, fl2_height);
                 
                 // Draw circles that a user can click on to choose start and end point
-
+                var startNode = true;
                 $.getJSON('data/floor_1.json ', function(graph) {
                     $.each(graph.nodes, function(index, node) {
 
@@ -68,6 +72,7 @@
 
                             var circleDraw = paper.circle(node.x, node.y, 10);
                             var circleClicked = false;
+                            
 
                             circleDraw.id  = index;
                             circleDraw.attr("stroke","black");
@@ -78,17 +83,31 @@
                             poi_set = {};
 
                             // Assign events
-                            var start = true;
+                            
                             circleDraw.click(function(evt){
+
                                 var poi_id = this.id;
+                                var nodeType;
+
                                 //console.log(graph.nodes[this.id]);
                                 if (circleClicked == false) {
+
+                                    if (startNode == true) {
+                                    nodeType = "start";
+                                    startNode = false;
+                                    } else {
+                                    nodeType = "poi";
+                                    }
+
+                                    console.log(nodeType);
+
                                     this.attr("stroke", "blue");
                                     this.attr("stroke-width", 3);
                                     //this.attr("fill", "#73c21f");
                                     this.attr("fill-opacity", "0");
                                     circleClicked = true;
-                                    poi_set[poi_id] = {x: node.x, y: node.y, type: "poi"};
+                                    poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType};
+                                    
                                 } else {
                                     //this.attr("fill", "white");
                                     //this.attr("fill-opacity", ".3");
@@ -119,11 +138,10 @@
                     });
                 });
 
-                
                 $(window).keypress(function (evt){
                     if(evt.charCode == 13){ // 'return' is pressed 
                         //Add start point (museum entrance)
-                        poi_set["481_599"] = {x: 481, y: 599, type: "start"};
+                        //poi_set["481_599"] = {x: 481, y: 599, type: "start"};
                         // Run the Dijkstra algorithm via server
                         var poiData = JSON.stringify(poi_set);
                         var prefData = JSON.stringify(userPrefs);
