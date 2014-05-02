@@ -12,7 +12,6 @@
 
     <script src="js/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/raphael-min.js"></script>
-    <script src="js/dijkstra_mvp3.js"> </script>
     <script language='javascript'>
         $( document ).ready(function() {
            
@@ -22,11 +21,13 @@
             var crowd_pref = 0; // 0 = don't care; 1 = low; 2 = high;
             var noise_pref = 0; // 0 = don't care; 1 = low; 2 = high;
             
-            var userPrefs = {light: light_pref, crowd: crowd_pref, noise: noise_pref};
+            //var userPrefs = {light: light_pref, crowd: crowd_pref, noise: noise_pref};
+
+            var userPrefs = {light: 0, crowd: 0, noise: 0};
 
            // map vars 
             var fl1_url = "metmap_fl1.png";
-            var fl1_L_url = "metmap_fl1_light2.png";
+            var fl1_L_url = "metmap_fl1_light.png";
             var fl1_galleries_url = "metmap_fl1_galleries.png";
             
             var imgScale = .3;
@@ -194,44 +195,48 @@
                     });
                 });
             } 
-        });
+
         
         // Drop down menues for access pref user input
 
-        $("#edit").empty();
+        $("#editPrefs").empty();
 
+        console.log( $("#editPrefs").text());
 
-        var form = $("<form>").appendTo("#edit");
+        var form = $("<form>").appendTo("#editPrefs");
 
         var lightSelect = $("<span>Light Level:</span><select name='lightlevel'><BR>").appendTo(form);
-        lightSelect.append("<option value=''>Select Light Level...</option>")
-        lightSelect.append("<option value='low'>low</option>")
-        .append("<option value='medium'>medium</option>")
-        .append("<option value='high'>high</option>")
+        lightSelect.append("<option value='0'>Select Light Level...</option>")
+        lightSelect.append("<option value='1'>Bright</option>")
+        .append("<option value='2'>Dark and subdued</option>")
+        .append("<option value='0'>Don't care</option>")
         .bind('change', function(evt){
             console.log($(this).val());
-            //userPrefs.light("lightlevel", $(this). val()); 
-        })//.val(userPrefs.light("lightlevel"));
+            userPrefs.light = $(this).val();
+            console.log(userPrefs);
+        });
 
         var crowdSelect = $("<span>Crowd Level:</span><select name='crowdlevel'><BR>").appendTo(form);
-        crowdSelect.append("<option value=''>Select Crowd Level...</option>")
-        crowdSelect.append("<option value='low'>low</option>")
-        .append("<option value='medium'>medium</option>")
-        .append("<option value='high'>high</option>")
+        crowdSelect.append("<option value='0'>Select Crowd Level...</option>")
+        crowdSelect.append("<option value='1'>Uncrowded and calm</option>")
+        .append("<option value='2'>Crowded and lively</option>")
+        .append("<option value='0'>Don't care</option>")
         .bind('change', function(evt){
             console.log($(this).val());
-            //userPrefs.crowd("crowdlevel", $(this). val());
-        })//.val(userPrefs.crowd("crowdlevel"));
+            userPrefs.crowd = $(this).val();
+            console.log(userPrefs);
+        });
 
         var noiseSelect = $("<span>Noise Level:</span><select name='noiselevel'><BR>").appendTo(form);
-        noiseSelect.append("<option value=''>Select Noise Level...</option>")
-        noiseSelect.append("<option value='low'>low</option>")
-        .append("<option value='medium'>medium</option>")
-        .append("<option value='high'>high</option>")
+        noiseSelect.append("<option value='0'>Select Noise Level...</option>")
+        noiseSelect.append("<option value='1'>Quiet</option>")
+        .append("<option value='2'>Lively</option>")
+        .append("<option value='0'>Don't care</option>")
         .bind('change', function(evt){
             console.log($(this).val());
-            //userPrefs.noise("noiselevel", $(this). val());
-        })//.val(circle.data("noiselevel"));
+            userPrefs.noise = $(this).val();
+            console.log(userPrefs);
+        });
 
         $(":input" ,form).focus(function(){
             editfocus = true;
@@ -239,14 +244,18 @@
         $(":input" ,form).blur(function(){
             editfocus = false;
         });
+        
+        //console.log(userPrefs);
 
+
+    });
    </script>
 
 </head>
 <body>
 <nav class="navbar navbar-default" role="navigation">
- <div class="container-fluid">
-  <div class="navbar-header">
+<div class="container-fluid">
+    <div class="navbar-header">
       <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
         <span class="sr-only">Toggle navigation</span>
         <span class="icon-bar"></span>
@@ -263,42 +272,40 @@
 
       <ul class="nav navbar-nav navbar-right">
         <li><span id="mode"></span></li>
-        <li><div class="form-group">
-          <input id="graphFilename" type="text" class="form-control" placeholder="Filename">
-        </div>
-      </li>
+        <li>
+            <div class="form-group">
+                <input id="graphFilename" type="text" class="form-control" placeholder="Filename">
+            </div>
+        </li>
         <li><a href="#" id="save">Save Graph</a></li>
         <li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">Load Graph<b class="caret"></b></a>
-          <ul class="dropdown-menu" id="load">
-          </ul>
+          <ul class="dropdown-menu" id="load"></ul>
         </li>
-
        </ul>       
     </div>
 
-
+</div>
 </nav>  
 
-    <div class="container-fluid" width="100%" >
+<div class="container-fluid" width="100%" >
 
 
-        <div class="row-fluid" id="mapmetadata">
-            <div class="span2" >
-                <div class="row-fluid"  >
-                    <div class="span12"  id="edit" >
-                        edit
-                    </div>
+    <div class="row-fluid" id="mapmetadata">
+        <div class="span2" >
+            <div class="row-fluid"  >
+                <div class="span12"  id="editPrefs" >
+                    edit
                 </div>
             </div>
-            <div class="span10" id="mapelem" ></div>
         </div>
-
-
+        <div class="span10" id="mapelem" ></div>
     </div>
 
 
+</div>
 
-    </div>
+
+
 </body>
 </html>
