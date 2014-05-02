@@ -68,7 +68,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 
 
 
-  	var imageurl = "metmap_fl1.png";
+  	var imageurl = "metmap_fl1_galnums.png";
   	var srcWidth = 3214;
   	var srcHeight = 2142;
   	var imageScale = .3;
@@ -142,6 +142,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 					lightlevel : elem.data("lightlevel"),
 					noiselevel : elem.data("noiselevel"),
 					crowdlevel : elem.data("crowdlevel"),
+					galnum : elem.data("galnum"),
 				};
 				data.nodes[name] = ndata;
 			}else if(elem.type == "path"){

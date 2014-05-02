@@ -14,24 +14,16 @@
     <script type="text/javascript" src="js/raphael-min.js"></script>
     <script language='javascript'>
         $( document ).ready(function() {
-           
-           // temp values while I figure out how to get user input
-
-            var light_pref = 1; // 0 = don't care; 1 = bright; 2 = dim;
-            var crowd_pref = 0; // 0 = don't care; 1 = low; 2 = high;
-            var noise_pref = 0; // 0 = don't care; 1 = low; 2 = high;
-            
-            //var userPrefs = {light: light_pref, crowd: crowd_pref, noise: noise_pref};
 
             var userPrefs = {light: 0, crowd: 0, noise: 0};
 
            // map vars 
             var fl1_url = "metmap_fl1.png";
             var fl1_L_url = "metmap_fl1_light.png";
-            var fl1_galleries_url = "metmap_fl1_galleries.png";
             
             var imgScale = .3;
-            var padding = 50;
+            var vertShift = 0;
+
 
             // floor 1
             var fl1_srcWidth = 3214; 
@@ -41,15 +33,23 @@
 
             var paper; // "canvas"
             
-            $("#mapelem").height(fl1_height).width(fl1_width);
+            $("#mapelem").height(fl1_height+vertShift).width(fl1_width);
 
-            Raphael("mapelem", fl1_width, fl1_height, function(
+            Raphael("mapelem", fl1_width, fl1_height+vertShift, function(
                 text){
                 
                 paper = this; //this is valid within this functiom
                 
-                fl1_paperImg = paper.image(fl1_L_url, 0,0, fl1_width, fl1_height);
+                var fl1_paperImg = paper.image(fl1_L_url, 0,vertShift, fl1_width, fl1_height);
+                
+                /*
+                fl1_paperImg.click(function(evt){
+                    console.log("you clicked the map");
+                    fl1_paperImg = paper.image(fl1_url, 0,vertShift, fl1_width, fl1_height);
+                });
+                */
 
+                /*
                 $(window).keypress(function (evt){
                     if(evt.charCode == 1){ // 'return' is pressed 
                         fl1_paperImg = paper.image(fl1_url, 0,0, fl1_width, fl1_height);
@@ -58,7 +58,7 @@
                         fl1_L_paperImg = paper.image(fl1_L_url, 0,0, fl1_width, fl1_height);
                     } 
                 });                
-
+                */
                 //fl2_paperImg = paper.image(fl2_url, 0,fl1_height+padding, fl2_width, fl2_height);
                 
                 // Draw circles that a user can click on to choose start and end point
@@ -66,22 +66,70 @@
                 $.getJSON('data/floor_1.json ', function(graph) {
                     $.each(graph.nodes, function(index, node) {
 
-                        // set up access values
-
-
-                        if (node.nodetype == "gallery" || node.nodetype == "wc") { 
-
-                            var circleDraw = paper.circle(node.x, node.y, 10);
-                            var circleClicked = false;
+                        if (node.nodetype == "gallery") { 
                             
+                            poi_set = {};
+
+                            var txtClicked = false;
+
+                            var txtDraw = paper.text(node.x, node.y+vertShift, node.galnum);
+                            
+                            // gallery numbers
+                            txtDraw.id = index;
+                            txtDraw.attr("fill", "black");
+                            txtDraw.attr("fill-opacity",.5);
+                            txtDraw.attr("font-size", 10);
+
+                            // text event properties
+                            txtDraw.click(function(evt){
+
+                                var poi_id = this.id;
+                                var nodeType;
+
+                                //console.log(graph.nodes[this.id]);
+                                if (txtClicked == false) {
+
+                                    if (startNode == true) {
+                                    nodeType = "start";
+                                    startNode = false;
+                                    } else {
+                                    nodeType = "poi";
+                                    }
+
+                                    this.attr("fill", "blue");
+                                    txtClicked = true;
+                                    poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum};
+                                    
+                                    console.log(node);
+                                } else {
+                                    this.attr("fill", "black");
+                                    txtClicked = false;
+                                    delete poi_set[poi_id];
+                                }
+                            });
+                            
+                            txtDraw.mouseover(function(evt){
+                                if (txtClicked == false) {
+                                    this.attr("fill-opacity", 1);
+                                }
+                            });
+
+                            txtDraw.mouseout(function(evt){
+                                if (txtClicked == false) {
+                                    this.attr("fill-opacity", .5);
+                                }
+                            });
+
+                            /*
+                            var circleClicked = false;
+
+                            var circleDraw = paper.circle(node.x, node.y+vertShift, 10);
 
                             circleDraw.id  = index;
                             circleDraw.attr("stroke","black");
                             circleDraw.attr("stroke-width",.7);
                             circleDraw.attr("fill", "white");
                             circleDraw.attr("fill-opacity","0");
-                        
-                            poi_set = {};
 
                             // Assign events
                             
@@ -135,6 +183,7 @@
                                     this.attr("fill-opacity", "0");
                                 }
                             });
+                            */ 
                         }
                     });
                 });
@@ -166,7 +215,6 @@
                         });   
                     }
                 });                
-            
             });
             
             function drawPath(poi_set, poiPath) {
@@ -182,26 +230,32 @@
                         //circle.attr("fill", "blue");
                         //circle.attr("fill-opacity",".5");
                 });*/
+                // highlight path
 
                 // make lines
                 $.each(poiPath, function(index, path) {
                     $.each(path, function(index, edge) {
-
                         var pathString = "M"+edge.sx+","+edge.sy+"L"+edge.ex+","+edge.ey;
                         var line = paper.path(pathString);
                         line.attr("stroke","black");
                         line.attr("stroke-width",2);
-
                     });
                 });
+                /*
+                $.each(poi_set, function(index, node) {
+                    var txtHL = paper.text(node.x, node.y+vertShift, node.galnum);
+                        console.log("node.galnum:");
+                        console.log(node.galnum);
+                        txtDraw.attr("fill", "red");
+                        txtDraw.attr("fill-opacity",1);
+                        txtDraw.attr("font-size", 20);
+                });
+                */
             } 
 
-        
         // Drop down menues for access pref user input
 
         $("#editPrefs").empty();
-
-        console.log( $("#editPrefs").text());
 
         var form = $("<form>").appendTo("#editPrefs");
 
@@ -244,68 +298,33 @@
         $(":input" ,form).blur(function(){
             editfocus = false;
         });
-        
-        //console.log(userPrefs);
-
-
     });
    </script>
-
 </head>
 <body>
 <nav class="navbar navbar-default" role="navigation">
-<div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" href="#">Accessible Wayfinder MVP3</a>
+    <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Accessible Wayfinder MVP3</a>
+        </div>     
     </div>
-
-
-    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-
-<!--        <span id="save" >Save Graph</span> -->
-
-      <ul class="nav navbar-nav navbar-right">
-        <li><span id="mode"></span></li>
-        <li>
-            <div class="form-group">
-                <input id="graphFilename" type="text" class="form-control" placeholder="Filename">
-            </div>
-        </li>
-        <li><a href="#" id="save">Save Graph</a></li>
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Load Graph<b class="caret"></b></a>
-          <ul class="dropdown-menu" id="load"></ul>
-        </li>
-       </ul>       
-    </div>
-
+</nav>
 </div>
-</nav>  
-
-<div class="container-fluid" width="100%" >
-
-
-    <div class="row-fluid" id="mapmetadata">
-        <div class="span2" >
-            <div class="row-fluid"  >
-                <div class="span12"  id="editPrefs" >
-                    edit
-                </div>
+<div class="row-constant" id="mapmetadata">
+    <div class="span2" >
+        <div class="row-fluid"  >
+            <div class="span12"  id="editPrefs" >
+                edit
             </div>
         </div>
-        <div class="span10" id="mapelem" ></div>
     </div>
-
-
-</div>
-
-
-
+    <div class="span10" id="mapelem" ></div>
+</div>  
 </body>
 </html>
