@@ -42,7 +42,7 @@
                 
                 paper = this; //this is valid within this functiom
                 
-                var fl1_paperImg = paper.image(fl1_url, 0,vertShift, fl1_width, fl1_height);
+                var fl1_paperImg = paper.image(fl1_N_url, 0,vertShift, fl1_width, fl1_height);
                 
                 /*
                 fl1_paperImg.click(function(evt){
@@ -274,8 +274,8 @@
 
         var crowdSelect = $("<span>Crowd Level:</span><select name='crowdlevel'><BR>").appendTo(form);
         crowdSelect.append("<option value='0'>Select Crowd Level...</option>")
-        crowdSelect.append("<option value='2'>Uncrowded and calm</option>")
-        .append("<option value='1'>Crowded and lively</option>")
+        crowdSelect.append("<option value='1'>Uncrowded and calm</option>")
+        .append("<option value='2'>Crowded and lively</option>")
         .append("<option value='0'>Don't care</option>")
         .bind('change', function(evt){
             console.log($(this).val());
