@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Pathfinder MVP 2</title>
+    <title>Wayfinding MVP3 Reg</title>
 
     <div id="placeholder"></div>
     <!-- <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script> -->
@@ -285,8 +285,8 @@
 
         var noiseSelect = $("<span>Noise Level:</span><select name='noiselevel'><BR>").appendTo(form);
         noiseSelect.append("<option value='0'>Select Noise Level...</option>")
-        noiseSelect.append("<option value='1'>Quiet</option>")
-        .append("<option value='2'>Lively</option>")
+        noiseSelect.append("<option value='2'>Quiet</option>")
+        .append("<option value='1'>Lively</option>")
         .append("<option value='0'>Don't care</option>")
         .bind('change', function(evt){
             console.log($(this).val());
