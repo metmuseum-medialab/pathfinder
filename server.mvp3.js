@@ -1,11 +1,4 @@
 // node.js
-/* 
-
-*/
-
-/*
-testing:
-*/
 
 // connect to db,
 var dijkstra = require("./js/dijkstra_mvp3.js").dijkstra();
@@ -22,8 +15,8 @@ var pathparser = require("path");
 var dataFilename = "graph.json";
 var dataDir = "data/";
 
-var jsdom = require("jsdom"); 
-$ = require("jquery")(jsdom.jsdom().createWindow()); 
+var jsdom = require("jsdom");
+$ = require("jquery")(jsdom.jsdom().createWindow());
 
 var port = 8080;
 if(process && process.env && process.env.NODE_ENV == "production"){
@@ -44,7 +37,7 @@ function startServer(){
     console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! already started!");
     return;
   }
-    
+
   var http = require('http');
   http.createServer(function (req, res) {
     parseRequest(req, res);
@@ -59,9 +52,9 @@ function parseRequest(req, res){
   var parsed = urlparser.parse(req.url, true)
   var query = urlparser.parse(req.url, true).query;
   console.log('~~~~~~~~~~~~~~~~~');
- // console.log(parsed);
+//  console.log(parsed);
   console.log('~~~~~~~~~~~~~~~~~');
-  //console.log(query);
+//  console.log(query);
   console.log('~~~~~~~~~~~~~~~~~');
 
   if(!query.action){
@@ -69,17 +62,15 @@ function parseRequest(req, res){
 
   }else if (query.action == "poiPath"){
     console.log("calling poiPath");
-    
+
     poiPath.poiPathCalc(query.poi, query.prefs, function(poiPath_received){
       console.log("poiPathCalc is running on the server");
-      //console.log(poiPath_received);
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({poiPath: poiPath_received}));
     });
 
   }else if (query.action == "dijkstra"){
     console.log("calling DijkstraCalc");
-    //console.log(dijkstra);
     dijkstra.dijkstraCalc(query.c1, query.c2, function(nodes, edges){
       console.log("got nodes and edges");
       res.writeHead(200, {'Content-Type': 'application/json'});
@@ -89,13 +80,13 @@ function parseRequest(req, res){
 
   }else if (query.action == "savegraph"){
     saveGraph(req, res, query);
-  
+
   }else if (query.action == "loadgraph"){
     loadGraph(req, res, query);
-  
+
   }else if (query.action == "getgraphlist"){
     getGraphList(req, res, query);
-  
+
   }else{
    res.writeHead(200, {'Content-Type': 'text/html'});
    res.end("<html><body><pre>not sure what to do</pre></body></html>");
@@ -104,13 +95,6 @@ function parseRequest(req, res){
 }
 
 function saveGraph(req, res, query){
-  //console.log(JSON.stringify(req));
-
-  /*
-  var graph = JSON.parse(query.graph);
-  var graphstring = JSON.stringify(graph, null, ' ');
- */
-
 
   var body = '';
 
@@ -133,7 +117,7 @@ function saveGraph(req, res, query){
     var data = JSON.parse(body);
 
 
-    var filename; 
+    var filename;
     var dataFilename;
     var shortname;
     if(data.filename && data.filename.trim() != ""){
@@ -157,7 +141,7 @@ function saveGraph(req, res, query){
     var graphstring = JSON.stringify(graph);
 
     fs.writeFile(dataFilename, graphstring, function (err) {
-      if (err) { 
+      if (err) {
         var contentType = "application/json";
         res.writeHead(200, {'Content-Type': contentType});
 
@@ -171,7 +155,7 @@ function saveGraph(req, res, query){
       res.end(JSON.stringify({result: "good", filename: shortname}));
 
       console.log('data saved to file ' + dataFilename);
-    });    
+    });
 
   });
 
@@ -193,7 +177,7 @@ function getDataFileList(dirname, callback2){
   var filelist = fs.readdirSync(dirname);
 
   var newList = {};
-  async.eachSeries(filelist, 
+  async.eachSeries(filelist,
     function(file, callback){
 
       newList[file] = {file: file};
@@ -231,7 +215,7 @@ function loadGraph(req, res, query){
     var contentType = "application/json";
     res.writeHead(200, {'Content-Type': contentType});
     res.end(data);
-    
+
 
   });
 
@@ -266,13 +250,10 @@ function sendFile(path, query, res){
         console.log("file read error");
         console.log(err);
         res.writeHead(404, {'Content-Type': contentType});
-        //indexhtml = data;
         res.end(data);
       }else{
         res.writeHead(200, {'Content-Type': contentType});
         console.log("writing file " + path);
-     //   console.log(data);
-        //dataCache[path] = data;
         res.end(data);
       }
     });
@@ -281,4 +262,3 @@ function sendFile(path, query, res){
     res.end(dataCache[path]);
   }
 }
-

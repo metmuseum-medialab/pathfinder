@@ -15,19 +15,19 @@
     <script src="js/dijkstra.js"> </script>
     <script language='javascript'>
         $( document ).ready(function() {
-           
+
            var test = 10;
 
-           // map vars 
+           // map vars
             var imageurl = "metmap_fl1.png";
-            
+
             var srcWidth = 3214;
             var srcHeight = 2142;
             var imageScale = .3;
             var imageWidth = srcWidth * imageScale;
             var imageHeight = srcHeight * imageScale;
             var paper; // "canvas"
-            
+
             $("#mapelem").height(imageHeight).width(imageWidth);
 
             Raphael("mapelem", imageWidth, imageHeight, function(
@@ -40,7 +40,7 @@
                 $.getJSON('data/floor_1.json ', function(graph) {
                     $.each(graph.nodes, function(index, node) {
 
-                        if (node.nodetype == "gallery" || node.nodetype == "wc") { 
+                        if (node.nodetype == "gallery" || node.nodetype == "wc") {
 
                             var circleDraw = paper.circle(node.x, node.y, 5);
                             var circleClicked = false;
@@ -50,7 +50,7 @@
                             circleDraw.attr("stroke-width",0);
                             circleDraw.attr("fill", "white");
                             circleDraw.attr("fill-opacity",".2");
-                        
+
                             poi_set = {};
 
                             // Assign events
@@ -70,7 +70,7 @@
                                     delete poi_set[poi_id];
                                 }
                             });
-                            
+
                             circleDraw.mouseover(function(evt){
                                 if (circleClicked == false) {
                                     this.attr("fill", "#eb603b");
@@ -88,9 +88,9 @@
                     });
                 });
 
-                
+
                 $(window).keypress(function (evt){
-                    if(evt.charCode == 13){ // 'return' is pressed 
+                    if(evt.charCode == 13){ // 'return' is pressed
                         //Add start point (museum entrance)
                         poi_set["481_599"] = {x: 481, y: 599, type: "start"};
                         // Run the Dijkstra algorithm via server
@@ -111,11 +111,11 @@
                                 console.log(status);
                                 console.log(message);
                             }
-                        });   
+                        });
                     }
-                });                
+                });
             });
-            
+
             function drawPath(poi_set, poiPath) {
                 console.log("About to draw the path!")
 
@@ -141,7 +141,7 @@
 
                     });
                 });
-            } 
+            }
         });
    </script>
 
@@ -154,7 +154,7 @@
       </button>
       <a class="navbar-brand" href="#">PathFinder MVP 2</a>
     </div>
-</nav>  
+</nav>
 
     <div class="container-fluid" width="100%" >
 
