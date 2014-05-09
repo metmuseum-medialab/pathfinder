@@ -1,11 +1,4 @@
 // node.js
-/* 
-
-*/
-
-/*
-testing:
-*/
 
 // connect to db,
 var dijkstra = require("./js/dijkstra_mvp1.js").dijkstra();
@@ -21,16 +14,14 @@ var dataFilename = "graph.json";
 var dataDir = "data/";
 
 
-var jsdom = require("jsdom"); 
-$ = require("jquery")(jsdom.jsdom().createWindow()); 
+var jsdom = require("jsdom");
+$ = require("jquery")(jsdom.jsdom().createWindow());
 
 var port = 1337;
 if(process && process.env && process.env.NODE_ENV == "production"){
   port = 80;
 }
 // create some sample objects, put in couchdb
-
-
 
 startServer();
 
@@ -43,7 +34,7 @@ function startServer(){
     console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! already started!");
     return;
   }
-    
+
   var http = require('http');
   http.createServer(function (req, res) {
     parseRequest(req, res);
@@ -58,9 +49,9 @@ function parseRequest(req, res){
   var parsed = urlparser.parse(req.url, true)
   var query = urlparser.parse(req.url, true).query;
   console.log('~~~~~~~~~~~~~~~~~');
- // console.log(parsed);
+//  console.log(parsed);
   console.log('~~~~~~~~~~~~~~~~~');
-  //console.log(query);
+//  console.log(query);
   console.log('~~~~~~~~~~~~~~~~~');
 
   if(!query.action){
@@ -89,14 +80,6 @@ function parseRequest(req, res){
 
 
 function saveGraph(req, res, query){
-  //console.log(JSON.stringify(req));
-
-  /*
-  var graph = JSON.parse(query.graph);
-  var graphstring = JSON.stringify(graph, null, ' ');
- */
-
-
   var body = '';
 
   req.addListener('data', function(chunk){
@@ -118,7 +101,7 @@ function saveGraph(req, res, query){
     var data = JSON.parse(body);
 
 
-    var filename; 
+    var filename;
     var dataFilename;
     var shortname;
     if(data.filename && data.filename.trim() != ""){
@@ -142,7 +125,7 @@ function saveGraph(req, res, query){
     var graphstring = JSON.stringify(graph);
 
     fs.writeFile(dataFilename, graphstring, function (err) {
-      if (err) { 
+      if (err) {
         var contentType = "application/json";
         res.writeHead(200, {'Content-Type': contentType});
 
@@ -156,7 +139,7 @@ function saveGraph(req, res, query){
       res.end(JSON.stringify({result: "good", filename: shortname}));
 
       console.log('data saved to file ' + dataFilename);
-    });    
+    });
 
   });
 
@@ -178,7 +161,7 @@ function getDataFileList(dirname, callback2){
   var filelist = fs.readdirSync(dirname);
 
   var newList = {};
-  async.eachSeries(filelist, 
+  async.eachSeries(filelist,
     function(file, callback){
 
       newList[file] = {file: file};
@@ -216,7 +199,7 @@ function loadGraph(req, res, query){
     var contentType = "application/json";
     res.writeHead(200, {'Content-Type': contentType});
     res.end(data);
-    
+
 
   });
 
@@ -251,13 +234,10 @@ function sendFile(path, query, res){
         console.log("file read error");
         console.log(err);
         res.writeHead(404, {'Content-Type': contentType});
-        //indexhtml = data;
         res.end(data);
       }else{
         res.writeHead(200, {'Content-Type': contentType});
         console.log("writing file " + path);
-     //   console.log(data);
-        //dataCache[path] = data;
         res.end(data);
       }
     });
@@ -266,4 +246,3 @@ function sendFile(path, query, res){
     res.end(dataCache[path]);
   }
 }
-
