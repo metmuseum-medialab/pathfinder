@@ -1,0 +1,19 @@
+{ "name": "pathfinder"
+, "homepage": "http://metmuseummedialab.com"
+, "bugs": "http://github.com/metmuseum-medialab/pathfinder"
+, "contributors": ["Yuliya Parshina-Kottas"]
+, "licenses": [ "ISC" ]
+, "version": "0.0.1"
+, "description": "pathfinding for the met museum"
+, "author": "Yuliya Parshina-Kottas <yparshina@gmail.com>"
+, "keywords": ["pathfinding", "dijkstra", "museum"]
+, "dependencies":
+  { "async": "^0.8.0"
+  , "jquery": "^2.1.1"
+  , "jsdom": "^0.10.5"
+  }
+, "repository" :
+  { "type" : "git"
+  , "url" : "http://github.com/metmuseum-medialab/pathfinder.git"
+  }
+}
