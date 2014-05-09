@@ -9,6 +9,13 @@ Initially we are creating the route-creation app, to build the dataset.
 
 ---
 
+# Running the pathfinder
+
+  * Install all the node libraries with `npm install`
+  * Run the appropriate server, for example `node server.mvp1.js`
+  * Open [http://localhost:1337](http://localhost:1337) in a browser
+
+
 [MVP1](index_mvp1.html):
 Calculates a path form A to B using Dijkstra's weighted graph algorithm
 
