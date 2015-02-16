@@ -14,7 +14,7 @@ function poiPath(){
 
       var userPrefs = prefs;
 
-      var dijkstra = require("./dijkstra_mvp3.js").dijkstra();
+      var dijkstra = require("./dijkstra.js").dijkstra();
       dijkstra.graph_file = "data/floor_1.json";
 
       var poiPerm = {};
