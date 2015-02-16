@@ -25,9 +25,9 @@ var dataDir = "data/";
 var jsdom = require("jsdom"); 
 $ = require("jquery")(jsdom.jsdom().createWindow()); 
 
-var port = 8080;
+var port = 1337;
 if(process && process.env && process.env.NODE_ENV == "production"){
-  port = 80;
+  port = 1337;
 }
 // create some sample objects, put in couchdb
 
