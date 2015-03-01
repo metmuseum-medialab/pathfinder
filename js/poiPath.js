@@ -21,13 +21,17 @@ function poiPath(){
 
       poi_set = JSON.parse(poi);
 
-      var startPoint;
+      var startPoint = false;
       $.each(poi_set, function(index, poi){
         if(poi.type == "start"){
+          console.log("start point is"+ index);
           startPoint = index;
         }
       });
 
+      if(!startPoint){
+        console.log("no start point specified");
+      }
       //console.log(poi_set);
 
       // array of poi names: because eachSeries doesn't give access to index name

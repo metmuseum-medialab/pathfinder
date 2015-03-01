@@ -117,14 +117,14 @@ function dijkstra(){
               node.n = highPref;
             }
           }
-        
+        /*
         console.log("node.l");
         console.log(node.l);
         console.log("node.c");
         console.log(node.c);
         console.log("node.n");
         console.log(node.n);
-        
+        */
         });
 
         

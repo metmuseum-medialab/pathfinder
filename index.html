@@ -208,6 +208,7 @@
                             // processData : false,
                             success : function(poiPath, status){
                                 console.log("Received poiPath data from server!!!");
+                                console.log(poiPath);
                                 drawPath(poi_set, poiPath);
                             },
 
@@ -243,6 +244,14 @@
                         var line = paper.path(pathString);
                         line.attr("stroke","black");
                         line.attr("stroke-width",2);
+                        console.log(edge);
+                        // number the points
+                        var halfx = (edge.sx + edge.ex) / 2;
+                        var halfy = (edge.sy + edge.ey) / 2 ;
+                        console.log(halfx);
+                        var ident = paper.text(halfx, halfy, index);
+                        ident.attr("fill", "red");
+                        ident.attr("font-size", 20);
                     });
                 });
                 /*
