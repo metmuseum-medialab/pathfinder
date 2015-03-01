@@ -30,8 +30,8 @@ Graph Format:
 Graph files (json) look like:
 
     {  
-       "image_height":642.6,
-       "imageWidth":964.1999999999999,
+       "image_height":642.6,  // the map image height
+       "imageWidth":964.1999999999999, // the map image width
        "nodes":{  
           "481_599":{  
              "x":481,
@@ -88,6 +88,31 @@ prefs="{stringified json of weighting preferences, where higher integers means "
 eg:
 
     prefs="{"light":"0","crowd":"2","noise":0}"
+    
+Response
+--------
+returned is json data, describing each segment of the route, in order
+eg:
+
+    poiPath: [
+        {ex: 176 // end node, x coord
+        ey: 125  // end node, y coord
+        length: 32.01562118716424 // lenth of path
+        n1: "144_124" // node 1 name
+        n2: "176_125" // node 2 name
+        sx: 144 // start node, x coord
+        sy: 124} // start node, y coord
+        {ex: 144
+        ey: 124
+        length: 31.016124838541646
+        n1: "113_123"
+        n2: "144_124"
+        sx: 113
+        sy: 123
+        }
+        ....etc
+    ]
+
 
 ====================================================================================================
 
