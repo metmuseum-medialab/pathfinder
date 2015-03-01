@@ -1,22 +1,21 @@
 pathfinder
 ==========
-This is an app for creating routes on a map,
-Then using those routes to determine ideal paths through a space.
+This is an app and webservice that makes is easy to create wayfinding experiences that involve dynamic path generation. It was designed for large, confusing, indoor spaces, but in fact could be used abstractly for any graph-traversal/path optimization problem. It supports weighting of paths so allow for different routes depending on the users preference to avoid dimly lit spaces, stairs, etc.
 
-Paths may be weighted according to a user's preferences (avoiding stairs, dim rooms, etc)
+This code consists of two parts:
 
-initially we are creating the route-creation app, to build the dataset.
+MapMaker: 
+Mapmaker is a simple tools for drawing graphs over an image of a map. In this tool, you draw every possible route from one room to another. You then assign metadata values to the routes and intersections. This metadata is later used by PathFinder to calculate routes
+
+
+Pathfinder: 
+Pathfinder is a service that allows you to request an optimal path through multiple points, taking into account a variety of preferences.
+
+Pathfinder comes with a very simple frontend, but this was designed simply to test the algorithm. It's expected that you'll make your own implementation of a frontend.
+
+This project is very much in development. There's lots of code that's specific to our implementation at the Met, that we're working to abtract out to make it a more general purpose tool.
 
 
 ====================================================================================================
-
-MVP1:
-Calculates a path form A to B using Dijkstra's weighted graph algorithm
-
-MVP2: 
-Calculates a path between multiple user-defined points (starting at the Met's entrance) by creating permutations of all possible paths between these points (using the Dijkstra algorithm from MVP1) and then applying the Nearest Neighbor algorithm (a heuristic approach to the Travelling Salesman Problem) to choose the best route among all the possible paths.
-
-MVP3: 
-Accepts user preferences for light, crowd, and noise levels, and adjusts the path based on these preferences, by changing the lengths of graph edges based on the desirability of their environment.
 
 
