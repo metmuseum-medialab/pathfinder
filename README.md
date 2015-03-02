@@ -7,7 +7,7 @@ Terms:
 ======
 "node" - a point in a graph
 "edge" - a line connecting two nodes
-"Point of Interest" aka POI - a node named for a gallery, bathroom, or other idenfifyable space.
+"Point of Interest" aka POI, aka waypoint - a node you've selected as a point you want to pass through.
 "pass"  - a node that is NOT a point of interest, but needed to define a path through a space.
 
 This code consists of two parts:
@@ -94,26 +94,78 @@ Response
 returned is json data, describing each segment of the route, in order
 eg:
 
-    poiPath: [
-        {ex: 176 // end node, x coord
-        ey: 125  // end node, y coord
-        length: 32.01562118716424 // lenth of path
-        n1: "144_124" // node 1 name
-        n2: "176_125" // node 2 name
-        sx: 144 // start node, x coord
-        sy: 124} // start node, y coord
-        {ex: 144
-        ey: 124
-        length: 31.016124838541646
-        n1: "113_123"
-        n2: "144_124"
-        sx: 113
-        sy: 123
-        }
-        ....etc
-    ]
-
-
-====================================================================================================
-
-
+    {  
+       "poiPath":[  
+          {  
+             "sx":36,
+             "sy":398,
+             "ex":36,
+             "ey":437,
+             "length":39,
+             "n1":"36_398",
+             "n2":"36_437",
+             "startsAtPoi":{   // if this part of your route starts at one of your selected waypoints, this data is here
+                "x":36,
+                "y":398,
+                "type":"start",
+                "galnum":"354",
+                "outEdges":{  
+                   "36_398:27_554":"36_398:27_554",
+                   "36_398:81_467":"36_398:81_467"
+                },
+                "visited":true
+             }
+          },
+          {  
+             "sx":36,
+             "sy":437,
+             "ex":76,
+             "ey":437,
+             "length":40,
+             "n1":"36_437",
+             "n2":"76_437"
+          },
+          {  
+             "sx":76,
+             "sy":437,
+             "ex":81,
+             "ey":467,
+             "length":30.4138126514911,
+             "n1":"76_437",
+             "n2":"81_467",
+             "endsAtPoi":{   // if this part of your route end at one of your selected waypoints (POI), this data is here
+                "x":81,
+                "y":467,
+                "type":"poi",
+                "galnum":"353",
+                "outEdges":{  
+                   "36_398:81_467":"36_398:81_467",
+                   "27_554:81_467":"27_554:81_467"
+                },
+                "visited":true
+             }
+          },
+          {  
+             "sx":81,
+             "sy":467,
+             "ex":33,
+             "ey":467,
+             "length":48,
+             "n1":"81_467",
+             "n2":"33_467",
+             "startsAtPoi":{  
+                "x":81,
+                "y":467,
+                "type":"poi",
+                "galnum":"353",
+                "outEdges":{  
+                   "36_398:81_467":"36_398:81_467",
+                   "27_554:81_467":"27_554:81_467"
+                },
+                "visited":true
+             }
+          },
+    
+    ====================================================================================================
+    
+    
