@@ -232,6 +232,7 @@ function dijkstra(){
         var pathNode = endPoint;
         var path_nodes = {};
         var path_edges = {};
+        var path_edges_array =[];
         pathEdge = graph.nodes[pathNode].lastEdge;
       
         // Trace the path from endPoint to startPoint
@@ -258,6 +259,7 @@ function dijkstra(){
             n1: graph.edges[pathEdge].startNode,
             n2: graph.edges[pathEdge].endNode,
           }
+          path_edges_array.push(path_edges[pathEdge]);
           
           // if the lastEdge does not contain the startPoint
           if(graph.edges[pathEdge].startNode != pathNode) {
@@ -271,7 +273,7 @@ function dijkstra(){
 
         path_nodes[pathNode] = {x: graph.nodes[startPoint].x, y: graph.nodes[startPoint].y};
 
-        callback(path_nodes, path_edges);
+        callback(path_nodes, path_edges, path_edges_array);
 
       });
     }

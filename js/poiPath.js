@@ -60,9 +60,12 @@ function poiPath(){
         async.eachSeries(poi_count, function(poi_2, callback_2){
 
           if (poi_2 > poi_1) { // permutate without repetitions
-            dijkstra.dijkstraCalc(poi_names[poi_1], poi_names[poi_2], userPrefs, function(result_nodes, result_edges){
+            // a bug messing up the order?
+//            dijkstra.dijkstraCalc(poi_names[poi_1], poi_names[poi_2], userPrefs, function(result_nodes, result_edges){
+            dijkstra.dijkstraCalc(poi_names[poi_2], poi_names[poi_1], userPrefs, function(result_nodes, result_edges, result_edges_array){
               
-              poiPerm[poi_names[poi_1] + ":" + poi_names[poi_2]] = {nodes: result_nodes, edges: result_edges, n1: poi_names[poi_1], n2: poi_names[poi_2]};
+            poiPerm[poi_names[poi_1] + ":" + poi_names[poi_2]] = {nodes: result_nodes, edges: result_edges, edges_array: result_edges_array, n1: poi_names[poi_1], n2: poi_names[poi_2]};
+  //            poiPerm[poi_names[poi_2] + ":" + poi_names[poi_1]] = {nodes: result_nodes, edges: result_edges, n1: poi_names[poi_1], n2: poi_names[poi_2]};
               
               callback_2();
             });
@@ -136,6 +139,8 @@ function poiPath(){
 
           NearestNeighbor();
 
+          var prevn2 =false;
+
           function NearestNeighbor(){
 
             var shortestEdge = Infinity;
@@ -157,11 +162,22 @@ function poiPath(){
             });
 
             // add the shortest edge to the poiPath_NN array
-            $.each(poiPerm[shortestEdgeID].edges, function(index, edge){
+            // note: i think these are getting pushed in in an arbitrary order
+            var wasReversed = false;
+            if(prevn2 && poiPerm[shortestEdgeID].n1 != prevn2){
+              wasReversed = true;
+              console.log("line order reversed. prevn2 is " + prevn2 + " n1 is " + poiPerm[shortestEdgeID].n1 + ", n2 " +poiPerm[shortestEdgeID].n2);
+              poiPerm[shortestEdgeID].edges_array.reverse();
+//              var tempn = poiPerm[shortestEdgeID].n2;
+
+            }
+            $.each(poiPerm[shortestEdgeID].edges_array, function(index, edge){
+              console.log("adding shortest" +  poiPerm[shortestEdgeID].n1 + " :  " + poiPerm[shortestEdgeID].n2)
               poiPath_NN.push(edge);
               //poiPath_NN[shortestEdgeID].index = edge;
+
             });
-            
+            prevn2 = wasReversed ? poiPerm[shortestEdgeID].n2 : poiPerm[shortestEdgeID].n1;
             
             // make the unvisited node on the shortest edge the current node
             if(poiPerm[shortestEdgeID].n1 != curNode){
