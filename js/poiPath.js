@@ -22,10 +22,12 @@ function poiPath(){
       poi_set = JSON.parse(poi);
 
       var startPoint = false;
+      var edgepn2 = false;
       $.each(poi_set, function(index, poi){
         if(poi.type == "start"){
           console.log("start point is"+ index);
           startPoint = index;
+          edgepn2 = index;
         }
       });
 
@@ -141,10 +143,13 @@ function poiPath(){
 
           var prevn2 =false;
 
-          function NearestNeighbor(){
+
+          function NearestNeighbor(startnode){
 
             var shortestEdge = Infinity;
             var shortestEdgeID;
+//            var edgepn2 = startnode;
+
 
             // cycle through outEdges
             $.each(poi_set[curNode].outEdges, function(index, edge){
@@ -172,9 +177,38 @@ function poiPath(){
 
             }
             $.each(poiPerm[shortestEdgeID].edges_array, function(index, edge){
-              console.log("adding shortest" +  poiPerm[shortestEdgeID].n1 + " :  " + poiPerm[shortestEdgeID].n2)
-              poiPath_NN.push(edge);
+              console.log("adding shortest" +  poiPerm[shortestEdgeID].n1 + " :  " + poiPerm[shortestEdgeID].n2);
+              console.log("n1 " + edge.n1 + " : n2 : " + edge.n2);
               //poiPath_NN[shortestEdgeID].index = edge;
+              // we want all edges to be pointing in the right direction. if the n1 of this edge isn't the n2 of the previous, flip all the values
+              var edgeflip = false;
+              if(!edgepn2){
+                console.log("no pn2, startPoint is " + startPoint);
+              }
+              console.log("edgepn2 is " + edgepn2);
+              if(edgepn2 && edge.n1 != edgepn2){
+                edgeflip = true;
+                var tempvar = edge.ey;
+                edge.ey = edge.sy;
+                edge.sy = tempvar;
+                tempvar = edge.ex;
+                edge.ex = edge.sx;
+                edge.sx = tempvar;
+                tempvar = edge.n1;
+                edge.n1 = edge.n2;
+                edge.n2 = tempvar;
+              }
+              edgepn2 = edge.n2;
+
+              if(index == 0){
+                edge.startsAtPoi = poi_set[edge.n1];
+              }
+              if(index == poiPerm[shortestEdgeID].edges_array.length - 1){
+                edge.endsAtPoi = poi_set[edge.n2];
+              }
+
+              poiPath_NN.push(edge);
+
 
             });
             prevn2 = wasReversed ? poiPerm[shortestEdgeID].n2 : poiPerm[shortestEdgeID].n1;
