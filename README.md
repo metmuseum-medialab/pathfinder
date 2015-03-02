@@ -3,6 +3,8 @@ Pathfinder
 This is an app and webservice that makes is easy to create wayfinding experiences that involve dynamic path generation. It was designed for large, confusing, indoor spaces, but in fact could be used abstractly for any graph-traversal/path optimization problem. It supports weighting of paths so allow for different routes depending on the users preference to avoid dimly lit spaces, stairs, etc.
 
 
+This code was created originally by Yuliya Parshina-Kottas, while she was serving as an intern in the MediaLab at the Metropolitan Museum of Art.
+
 Terms:
 ======
 "node" - a point in a graph
