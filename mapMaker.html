@@ -7,10 +7,32 @@
 <link href="css/bootstrap-responsive.css" rel="stylesheet">
 <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
 
+<style>
+#dialog-form {
+	background: white;
+	padding: 5px;
+	font-size: .5em;
+}
+.no-close .ui-dialog-titlebar-close {
+  display: none;
+}
+
+.ui-dialog-titlebar {
+	 height: 32px; 
+}
+.ui-dialog-buttonpane  {
+	height: 20px;
+	font-size: .5em;
+}
+
+</style>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
 
 
 
 <script src="js/jquery-1.11.0.min.js"></script>
+
+  <script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
 
 <script src="js/bootstrap.min.js"></script>
 
@@ -68,10 +90,23 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 
 
 
-  	var imageurl = "images/metmap_fl1_galnums.png";
-  	var srcWidth = 3214;
-  	var srcHeight = 2142;
+  	var imageurl = "images/MuseumMapFullAug2014.jpg";
+  	var srcWidth = 2750;
+  	var srcHeight = 4125;
   	var imageScale = .3;
+
+  	/* temp vars for a quick fix on graph data */
+  	/* this should become a feature, and part of the UI */
+  	/*
+  	var graphscalex = .66;
+  	var graphscaley = graphscalex;
+  	var graphoffsetx = 135;
+  	var graphoffsety = 550;
+*/
+  	var graphscalex = 1;
+  	var graphscaley = graphscalex;
+  	var graphoffsetx = 0;
+  	var graphoffsety = 0;
 
 
   	var imageWidth = srcWidth * imageScale;
@@ -106,6 +141,19 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 	var selectedLine = false;
 
 
+
+	var dialog = $( "#dialog-form" ).dialog({
+	      autoOpen: false,
+	      height: "auto",
+	      width: "250",
+	      closeText: "close",
+	      closeOnEscape : true,
+	      draggable : true,
+	      modal: true,
+	      resizable: true,
+	      dialogClass: "no-close",
+
+	});
 
 
 	$("#save").click(function(evt){
@@ -374,6 +422,9 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 
 	function loadGraph(graph){
 		$.each(graph.nodes, function(index, node){
+			// ajusting for offest, scale.
+			node.x = (node.x * graphscalex) + graphoffsetx;
+			node.y = (node.y * graphscaley) + graphoffsety;
 			var circle = createCircle(node.x, node.y);
 			$.each(node, function(index, value){
 				circle.data(index, value);
@@ -384,6 +435,10 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 
 		// still problems with lines...
 		$.each(graph.edges, function(index, edge){
+			edge.sx = (edge.sx * graphscalex) + graphoffsetx;
+			edge.ex = (edge.ex * graphscalex) + graphoffsetx;
+			edge.sy = (edge.sy * graphscaley) + graphoffsety;
+			edge.ey = (edge.ey * graphscaley) + graphoffsety;
 			var line = createLine(edge.sx, edge.sy, edge.ex, edge.ey);
 			var startCircle = paper.getById(edge.sx+"_"+edge.sy);
 			var endCircle  = paper.getById(edge.ex+"_"+edge.ey);
@@ -420,7 +475,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		}else if (mode == "circlecreating"){
 			// circle is selected
 			unsetSelectedCircle();
-			setSelectedCircle(circle);
+			setSelectedCircle(circle, evt);
 		}
 		selectedCircle = circle;		
 	}
@@ -568,7 +623,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 
 		line.click(function(evt){
 			if(mode == "circlecreating"){
-				setSelectedLine(this);
+				setSelectedLine(this, evt);
 			}
 		});
 
@@ -625,7 +680,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		}
 	}
 
-	function setSelectedCircle(circle){
+	function setSelectedCircle(circle, evt){
 		unsetSelectedLine();
 		selectedCircle = circle;
 		selectedCircle.attr("stroke", selectedColor);
@@ -633,11 +688,14 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		selectedCircle.attr("fill", selectedColor);
 		selectedCircle.attr("fill-opacity",".4");
 
+		dialog.dialog("close");
+		$("#dialog-form").empty();
 
-		$("#edit").empty();
+//		$("dialog-form").dialog("option", "position", {my: "left + " + circle.cx  + " , top + " + circle.cy , of : "#mapelem" });
+		$("#dialog-form").dialog("option", "position", {my: "left top", at : "left top", of : evt });
 
-
-		var form = $("<form>").appendTo("#edit");
+		dialog.dialog("open");
+		var form = $("<form>").appendTo("#dialog-form");
 		$("<span>Gallery Number:</span><input type='text' class='gallery' name='gallery' size='5'/><BR>")
 			.appendTo(form)
 			.bind('input',function(evt){
@@ -645,7 +703,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 				circle.data("galnum", $(this).val());
 			}).val(circle.data("galnum"));
 		
-		var nodeTypeSelect = $("<span>Node Type:</span><select name='nodetype'><BR>").appendTo(form);
+		var nodeTypeLabel = $("<span>Node Type:</span><BR>").appendTo(form);
+		var nodeTypeSelect = $("<select name='nodetype'>").appendTo(form);
 		nodeTypeSelect.append("<option value=''>Select Node Type...</option>")
 		nodeTypeSelect.append("<option value='gallery'>gallery</option>")
 		.append("<option value='pass'>pass</option>")
@@ -657,7 +716,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			circle.data("nodetype", $(this). val());
 		}).val(circle.data("nodetype"));
 		
-		var lightSelect = $("<span>Light Level:</span><select name='lightlevel'><BR>").appendTo(form);
+		var lightSelectLabel = $("<BR><span>Light Level:</span><br>").appendTo(form);
+		var lightSelect = $("<select name='lightlevel'>").appendTo(form);
 		lightSelect.append("<option value=''>Select Light Level...</option>")
 		lightSelect.append("<option value='low'>low</option>")
 		.append("<option value='medium'>medium</option>")
@@ -667,7 +727,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			circle.data("lightlevel", $(this). val());
 		}).val(circle.data("lightlevel"));
 
-		var crowdSelect = $("<span>Crowd Level:</span><select name='crowdlevel'><BR>").appendTo(form);
+		var crowdSelectLabel = $("<BR><span>Crowd Level:</span><BR>").appendTo(form);
+		var crowdSelect = $("<select name='crowdlevel'><BR>").appendTo(form);
 		crowdSelect.append("<option value=''>Select Crowd Level...</option>")
 		crowdSelect.append("<option value='low'>low</option>")
 		.append("<option value='medium'>medium</option>")
@@ -677,7 +738,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			circle.data("crowdlevel", $(this). val());
 		}).val(circle.data("crowdlevel"));
 
-		var noiseSelect = $("<span>Noise Level:</span><select name='noiselevel'><BR>").appendTo(form);
+		var noiseSelectLabel =  $("<BR><span>Noise Level:</span><BR>").appendTo(form);
+		var noiseSelect = $("<select name='noiselevel'>").appendTo(form);
 		noiseSelect.append("<option value=''>Select Noise Level...</option>")
 		noiseSelect.append("<option value='low'>low</option>")
 		.append("<option value='medium'>medium</option>")
@@ -695,10 +757,37 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			editfocus = false;
 		});
 
-		var deletenode = $("<BR><BR><span>(d)elete</span>").appendTo("#edit").click(function(){
-			destroyCircle(circle);
-			$("#edit").empty();			
-		});
+		dialog.dialog( "option", "buttons", 
+		  [
+		    {
+		      text: "Delete",
+		      icons: {
+		        primary: "ui-icon-trash"
+		      },
+		      click: function() {
+	        	destroyCircle(circle);
+				$("#dialog-form").empty();	
+				$( this ).dialog("close");
+		      },		 
+		      // Uncommenting the following line would hide the text,
+		      // resulting in the label being used as a tooltip
+		      showText: false
+		    },
+		    {
+		    	text: "OK",
+		    	icons : {
+		    		primary: "ui-icon-check"
+		    	},
+		    	click: function(){
+					$("#dialog-form").empty();	
+					$( this ).dialog("close");	
+		    	},
+		    	showText: false
+		    }
+		  ]
+		);
+
+
 
 	}
 
@@ -713,7 +802,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		}
 	}
 
-	function setSelectedLine(line){
+	function setSelectedLine(line, evt){
 		unsetSelectedCircle();
 		unsetSelectedLine();
 
@@ -723,27 +812,54 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		selectedLine = line;
 
 		// set selected line form
-		$("#edit").empty();
-		var deletenode = $("<span>Delete</span>").appendTo("#edit").click(function(){
-			destroyLine(line);
-			$("#edit").empty();
-		});
+		$("#dialog-form").empty();
+		$("#dialog-form").dialog("option", "position", {my: "left top", at : "left top", of : evt });
 
-		var form = $("<form>").appendTo("#edit");
-		var checkbox = $("<span>Stairs : </span><input type='checkbox' class='stairs' name='stairs' value='true' label='stairs'>")
+		dialog.dialog("open");
+
+
+		var form = $("<form>").appendTo("#dialog-form");
+		var checkboxLabel = $("<span>Stairs : </span>").appendTo(form);
+		var checkbox = $("<input type='checkbox' class='stairs' name='stairs' value='true' label='stairs'>")
 				.appendTo(form)
-				.change(function(evt){
+				.change(function(evt2){
 					console.log($(this).is(":checked"));
 					line.data("stairs", $(this).is(":checked"));
 				})
 				.prop("checked", line.data("stairs"));
 
-		$(":input" ,form).focus(function(){
-			editfocus = true;
-		});
-		$(":input" ,form).blur(function(){
-			editfocus = false;
-		});
+
+
+		dialog.dialog( "option", "buttons", 
+		  [
+		    {
+		      text: "Delete",
+		      icons: {
+		        primary: "ui-icon-trash"
+		      },
+		      click: function() {
+	        	destroyLine(line);
+				$("#dialog-form").empty();	
+				$( this ).dialog("close");
+		      },		 
+		      // Uncommenting the following line would hide the text,
+		      // resulting in the label being used as a tooltip
+		      showText: false
+		    },
+		    {
+		    	text: "OK",
+		    	icons : {
+		    		primary: "ui-icon-check"
+		    	},
+		    	click: function(){
+					$("#dialog-form").empty();	
+					$( this ).dialog("close");	
+		    	},
+		    	showText: false
+		    }
+		  ]
+		);
+
 
 
 	}
@@ -838,7 +954,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 <body>
 
 <nav class="navbar navbar-default" role="navigation">
- <div class="container-fluid">
+ <div class="container-fluid" id="topcontainer">
   <div class="navbar-header">
       <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
         <span class="sr-only">Toggle navigation</span>
@@ -885,11 +1001,13 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 				</div>
 			</div>
 			<div class="span10" id="mapelem" ></div>
+
+	<div id="dialog-form">
+	</div>
 		</div>
 
 
 	</div>
-
 
 
 </body>
