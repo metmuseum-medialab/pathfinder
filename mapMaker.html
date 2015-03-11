@@ -31,6 +31,7 @@
 
 
 <script src="js/jquery-1.11.0.min.js"></script>
+<script src="js/jquery.ba-outside-events.min.js"></script>
 
   <script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
 
@@ -156,6 +157,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 	});
 
 
+
 	$("#save").click(function(evt){
 		console.log("saving graph");
 
@@ -178,12 +180,10 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		var data = {image_height : imageHeight, imageWidth : imageWidth,  nodes : {}, edges : {}};
 
 		paper.forEach(function(elem){
-			console.log(elem);
 			if(elem.type == "circle"){
 				var x = elem.attr("cx");
 				var y = elem.attr("cy");
-				var name = x + "_" + y;				
-				console.log("circle " + name);
+				var name = x + "_" + y;	
 				var ndata = {x : x, 
 					y: y,
 					nodetype : elem.data("nodetype"),
@@ -209,7 +209,6 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 							endNode : ec_name,
 							stairs : elem.data("stairs")
 						};
-				console.log("path " + name);
 				data.edges[name] = edata;
 			}
 		});
@@ -690,11 +689,14 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 
 		dialog.dialog("close");
 		$("#dialog-form").empty();
-
-//		$("dialog-form").dialog("option", "position", {my: "left + " + circle.cx  + " , top + " + circle.cy , of : "#mapelem" });
 		$("#dialog-form").dialog("option", "position", {my: "left top", at : "left top", of : evt });
-
 		dialog.dialog("open");
+		$(dialog).bind('clickoutside',function(){
+			$(dialog).unbind('clickoutside');
+			$("#dialog-form").empty();	
+		    $(dialog).dialog('close');
+		});
+
 		var form = $("<form>").appendTo("#dialog-form");
 		$("<span>Gallery Number:</span><input type='text' class='gallery' name='gallery' size='5'/><BR>")
 			.appendTo(form)
@@ -812,18 +814,26 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		selectedLine = line;
 
 		// set selected line form
+
+		dialog.dialog("close");
 		$("#dialog-form").empty();
 		$("#dialog-form").dialog("option", "position", {my: "left top", at : "left top", of : evt });
-
 		dialog.dialog("open");
-
+		var first = true;	
+		$(dialog).bind('clickoutside',function(){
+			if(!first){
+				$(dialog).unbind('clickoutside');
+				$("#dialog-form").empty();	
+			    $(dialog).dialog('close');
+			}
+			first = false;
+		});
 
 		var form = $("<form>").appendTo("#dialog-form");
 		var checkboxLabel = $("<span>Stairs : </span>").appendTo(form);
 		var checkbox = $("<input type='checkbox' class='stairs' name='stairs' value='true' label='stairs'>")
 				.appendTo(form)
 				.change(function(evt2){
-					console.log($(this).is(":checked"));
 					line.data("stairs", $(this).is(":checked"));
 				})
 				.prop("checked", line.data("stairs"));
@@ -859,6 +869,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		    }
 		  ]
 		);
+
 
 
 
@@ -912,7 +923,6 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			$.each(line.data("startCircle").data("lines"), function (index, itsLine){
 			if(itsLine == line){
 					startIndexToRemove = index;
-					console.log("start :"+ startIndexToRemove);
 					delete line.data("startCircle").data("lines")[index];
 				}
 			});
@@ -922,9 +932,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			$.each(line.data("endCircle").data("lines"), function (index, itsLine){
 				if(itsLine == line){
 					endIndexToRemove = index;
-					console.log("end : " + endIndexToRemove);
 					delete line.data("endCircle").data("lines")[index];
-
 				}
 			});
 		}
