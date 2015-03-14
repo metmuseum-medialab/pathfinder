@@ -424,7 +424,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		});
 */
 	}
-
+	var untypedCircles = [];
+	var currentUntypedCircle = 0;
 	function loadGraph(graph){
 		$.each(graph.nodes, function(index, node){
 			// ajusting for offest, scale.
@@ -434,6 +435,10 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			$.each(node, function(index, value){
 				circle.data(index, value);
 			});
+			if(!circle.data("nodetype") == ""){
+				untypedCircles.push(circle);
+				$("#numUntypedCircles").text(untypedCircles.length);
+			}
 		//	console.log(circle.data());
 
 		});
@@ -644,7 +649,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			if(mode == "circlecreating"){
 				if(line != selectedLine){
 					line.attr("stroke","#000");
-					line.attr("stroke-width",3);		
+					line.attr("stroke-width",2);		
 				}	
 			}
 		});
@@ -705,19 +710,22 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		});
 
 		var form = $("<form>").appendTo("#dialog-form");
-		$("<span>Gallery Number:</span><input type='text' class='gallery' name='gallery' size='5'/><BR>")
-			.appendTo(form)
-			.bind('input',function(evt){
-				console.log($(this).val());
-				circle.data("galnum", $(this).val());
-			}).val(circle.data("galnum"));
+
+		var checkboxLabel = $("<span>Is Closed: </span>").appendTo(form);
+		var checkbox = $("<input type='checkbox' class='closed' name='closed' value='true' label='closed'>")
+				.appendTo(form)
+				.change(function(evt2){
+					circle.data("closed", $(this).is(":checked"));
+				})
+				.prop("checked", circle.data("closed"));
+
+
 		
-		var nodeTypeLabel = $("<span>Node Type:</span><BR>").appendTo(form);
+		var nodeTypeLabel = $("<BR><span>Node Type:</span><BR>").appendTo(form);
 		var nodeTypeSelect = $("<select name='nodetype'>").appendTo(form);
 		nodeTypeSelect.append("<option value=''>Select Node Type...</option>")
-		nodeTypeSelect.append("<option value='gallery'>gallery</option>")
-		.append("<option value='pass'>pass</option>")
-		.append("<option value='stairs'>stairs</option>")
+		nodeTypeSelect.append("<option value='gallery'>gallery (one per gallery)</option>")
+		.append("<option value='pass'>passageway (or others in same gallery)</option>")
 		.append("<option value='elevator'>elevator</option>")
 		.append("<option value='wc'>bathroom</option>")
 		.append("<option value='cafe'>cafe</option>")
@@ -725,6 +733,15 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			console.log($(this).val());
 			circle.data("nodetype", $(this). val());
 		}).val(circle.data("nodetype"));
+
+		var galleryNumLabel = $("<BR><span>Gallery Number (or unique name):</span>").appendTo(form);
+		var galleryNum = $("<input type='text' class='gallery' name='gallery' size='5'/><BR>")
+			.appendTo(form)
+			.bind('input',function(evt){
+				console.log($(this).val());
+				circle.data("galnum", $(this).val());
+			}).val(circle.data("galnum"));
+
 		
 		var lightSelectLabel = $("<BR><span>Light Level:</span><br>").appendTo(form);
 		var lightSelect = $("<select name='lightlevel'>").appendTo(form);
@@ -812,6 +829,16 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		}
 	}
 
+	function getLineLength(line){
+		if(!line.next || !line.prev){
+			return "";
+		}
+		console.log(line);
+		var length =  Math.sqrt(Math.pow(Math.abs(line.next.attrs.cx - line.prev.attrs.cx), 2) + Math.pow(Math.abs(line.next.attrs.cy - line.prev.attrs.cy), 2));
+//	console.log(line.next.attrs.cx);
+	return length;
+	}
+
 	function setSelectedLine(line, evt){
 		unsetSelectedCircle();
 		unsetSelectedLine();
@@ -826,7 +853,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		dialog.dialog("close");
 		$("#dialog-form").empty();
 		$("#dialog-form").dialog("option", "position", {my: "left top", at : "left top", of : evt });
-		$("#dialog-form").dialog("option", "title", "Line " + line.id);
+		$("#dialog-form").dialog("option", "title", "Line " + line.id );
 		dialog.dialog("open");
 		var first = true;	
 		$(dialog).bind('clickoutside',function(){
@@ -847,6 +874,14 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 				})
 				.prop("checked", line.data("stairs"));
 
+		var lengthLabel = $("<BR><span>Length: " + getLineLength(line) + "</span>");
+		var overrideLengthLabel = $("<BR><span>Override Length:</span>").appendTo(form);
+		var overrideLength = $("<input type='text' class='overrideLength' name='overrideLength' size='5'/><BR>")
+			.appendTo(form)
+			.bind('input',function(evt){
+				console.log($(this).val());
+				line.data("overrideLength", $(this).val());
+			}).val(line.data("overrideLength")  );
 
 
 		dialog.dialog( "option", "buttons", 
@@ -998,6 +1033,9 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">Load Graph<b class="caret"></b></a>
           <ul class="dropdown-menu" id="load">
           </ul>
+        </li>
+        <li class"unidentifiedHelp">
+        	<span id="numUntypedCircles">0</span> <span>circles need identification</span>
         </li>
 
        </ul>       
