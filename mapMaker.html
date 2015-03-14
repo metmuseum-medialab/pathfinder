@@ -138,8 +138,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 //		$(untypedCircles[currentUntypedCircle]).trigger("click");
 
 		var e = new jQuery.Event("click");
-		e.pageX = untypedCircles[currentUntypedCircle].attrs.cx;
-		e.pageY = untypedCircles[currentUntypedCircle].attrs.cy;
+		e.pageX = untypedCircles[currentUntypedCircle].attrs.cx + $("#mapelem").offset().left;
+		e.pageY = untypedCircles[currentUntypedCircle].attrs.cy + $("#mapelem").offset().top;
 		$("#mapelem").trigger(e);		
 
 	});
@@ -459,9 +459,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 //				console.log(index + " : " +  value);
 				circle.data(index, value);
 			});
-			console.log(circle.data("nodetype"));
-			if(!circle.data("nodetype") || circle.data("nodetype") == ""){
-				console.log("adding");
+			if(!circle.data("nodetype") || circle.data("nodetype") == "" || (circle.data("nodetype") == "gallery" && !circle.data("galnum"))){
 				untypedCircles.push(circle);
 				$("#numUntypedCircles").text(untypedCircles.length);
 			}
@@ -563,7 +561,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		circle.data("lines", []);
 
 		circle.attr("stroke","#f00");
-		circle.attr("stroke-opacity",".7");
+		circle.attr("stroke-opacity",".5");
 		circle.attr("stroke-width",1);
 		circle.attr("fill", "#5f5");
 		circle.attr("fill-opacity",".2");
@@ -653,9 +651,9 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		var pathString = "M"+sx+","+sy+"L"+ex+","+ey;
 		var line = paper.path(pathString);
 
-		line.attr("stroke","#000");
+		line.attr("stroke","#222");
 		line.attr("stroke-width",2);
-		line.attr("stroke-opacity",.7);
+		line.attr("stroke-opacity",.5);
 
 		line.click(function(evt){
 			if(mode == "circlecreating"){
@@ -719,14 +717,14 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 	function setSelectedCircle(circle, evt){
 		unsetSelectedLine();
 		selectedCircle = circle;
-		selectedCircle.attr("stroke", selectedColor);
-		selectedCircle.attr("stroke-width",4);
-		selectedCircle.attr("fill", selectedColor);
-		selectedCircle.attr("fill-opacity",".4");
+		selectedCircle.attr("stroke", "white");
+		selectedCircle.attr("stroke-width",.5);
+		selectedCircle.attr("fill", "green");
+		selectedCircle.attr("fill-opacity",".2");
 
 		dialog.dialog("close");
 		$("#dialog-form").empty();
-		$("#dialog-form").dialog("option", "position", {my: "left top", at : "left top", of : evt });
+		$("#dialog-form").dialog("option", "position", {my: "left+5 top+5 ", at : "right bottom", of : evt });
 		$("#dialog-form").dialog("option", "title", "Point " + circle.id);
 		dialog.dialog("open");
 		$(dialog).bind('clickoutside',function(){
@@ -761,6 +759,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			console.log($(this).val());
 			circle.data("nodetype", $(this). val());
 		}).val(circle.data("nodetype"));
+
+		$(nodeTypeSelect).focus();
 
 		var galleryNumLabel = $("<BR><span>Gallery Number (or unique name):</span>").appendTo(form);
 		var galleryNum = $("<input type='text' class='gallery' name='gallery' size='5'/><BR>")
@@ -851,8 +851,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		    		currentUntypedCircle++;
 		    		currentUntypedCircle = currentUntypedCircle % untypedCircles.length;
 					var e = new jQuery.Event("click");
-					e.pageX = untypedCircles[currentUntypedCircle].attrs.cx;
-					e.pageY = untypedCircles[currentUntypedCircle].attrs.cy;
+					e.pageX = untypedCircles[currentUntypedCircle].attrs.cx + $("#mapelem").offset().left;
+					e.pageY = untypedCircles[currentUntypedCircle].attrs.cy + $("#mapelem").offset().top;
 					$("#mapelem").trigger(e);		
 		    	}
 		    });
@@ -898,7 +898,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 
 		dialog.dialog("close");
 		$("#dialog-form").empty();
-		$("#dialog-form").dialog("option", "position", {my: "left top", at : "left top", of : evt });
+		$("#dialog-form").dialog("option", "position", {my: "left - 5 top - 5", at : "left top", of : evt });
 		$("#dialog-form").dialog("option", "title", "Line " + line.id );
 		dialog.dialog("open");
 		var first = true;	
@@ -959,23 +959,6 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		    }
 		];
 
-		if(identifyingUntypedCircles){
-			console.log("pusshing");
-			buttonsArray.push(	
-			{	    	
-				text: "Next Untyped",
-		    	click: function(){
-					$("#dialog-form").empty();	
-					$( this ).dialog("close");	
-		    		currentUntypedCircle++;
-		    		currentUntypedCircle = currentUntypedCircle % untypedCircles.length;
-					var e = new jQuery.Event("click");
-					e.pageX = untypedCircles[currentUntypedCircle].attrs.cx;
-					e.pageY = untypedCircles[currentUntypedCircle].attrs.cy;
-					$("#mapelem").trigger(e);		
-		    	}
-		    });
-		}
 		dialog.dialog( "option", "buttons", buttonsArray);		    
 	}	
 

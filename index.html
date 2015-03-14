@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Wayfinding MVP3 Reg</title>
+    <title>Met Wayfinding Beta</title>
 
     <div id="placeholder"></div>
     <!-- <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script> -->
@@ -18,58 +18,56 @@
             var userPrefs = {light: 0, crowd: 0, noise: 0};
 
            // map vars 
-            var fl1_url = "images/metmap_fl1.png";
-            var fl1_L_url = "images/metmap_fl1_light.png";
-            var fl1_C_url = "images/metmap_fl1_crowd.png";
-            var fl1_N_url = "images/metmap_fl1_noise.png";
-            var all_floors_url = "images/MuseumMapFullAug2014";
+            var map_image_url = "images/MuseumMapFullAug2014.jpg";
 
             var imgScale = .3;
             var vertShift = 0;
 
             // floor 1
             /*
-            var fl1_srcWidth = 3214; 
-            var fl1_srcHeight = 2142; 
+            var map_srcWidth = 3214; 
+            var map_srcHeight = 2142; 
             */
-            var fl1_srcWidth = 2750; 
-            var fl1_srcHeight = 4125; 
-            var fl1_width = fl1_srcWidth * imgScale;
-            var fl1_height = fl1_srcHeight * imgScale;
+            var map_srcWidth = 2750; 
+            var map_srcHeight = 4125; 
+            var map_width = map_srcWidth * imgScale;
+            var map_height = map_srcHeight * imgScale;
 
             var paper; // "canvas"
             
-            $("#mapelem").height(fl1_height+vertShift).width(fl1_width);
+            $("#mapelem").height(map_height+vertShift).width(map_width);
 
-            Raphael("mapelem", fl1_width, fl1_height+vertShift, function(
+            Raphael("mapelem", map_width, map_height+vertShift, function(
                 text){
                 
                 paper = this; //this is valid within this functiom
                 
-                var fl1_paperImg = paper.image(all_floors_url, 0,vertShift, fl1_width, fl1_height);
+                var map_paperImg = paper.image(map_image_url, 0,vertShift, map_width, map_height);
                 
                 /*
-                fl1_paperImg.click(function(evt){
+                map_paperImg.click(function(evt){
                     console.log("you clicked the map");
-                    fl1_paperImg = paper.image(fl1_url, 0,vertShift, fl1_width, fl1_height);
+                    map_paperImg = paper.image(map_url, 0,vertShift, map_width, map_height);
                 });
                 */
 
                 /*
                 $(window).keypress(function (evt){
                     if(evt.charCode == 1){ // 'return' is pressed 
-                        fl1_paperImg = paper.image(fl1_url, 0,0, fl1_width, fl1_height);
+                        map_paperImg = paper.image(map_url, 0,0, map_width, map_height);
                     } 
                     if(evt.charCode == 2){ // 'return' is pressed 
-                        fl1_L_paperImg = paper.image(fl1_L_url, 0,0, fl1_width, fl1_height);
+                        map_L_paperImg = paper.image(map_L_url, 0,0, map_width, map_height);
                     } 
                 });                
                 */
-                //fl2_paperImg = paper.image(fl2_url, 0,fl1_height+padding, fl2_width, fl2_height);
+                //fl2_paperImg = paper.image(fl2_url, 0,map_height+padding, fl2_width, fl2_height);
                 
                 // Draw circles that a user can click on to choose start and end point
                 var startNode = true;
                 $.getJSON('data/all_floors.json ', function(graph) {
+                    console.log("got data");
+                    console.log(graph);
                     $.each(graph.nodes, function(index, node) {
 
                         if (node.nodetype == "gallery") { 
@@ -102,7 +100,7 @@
                                     nodeType = "poi";
                                     }
 
-                                    this.attr("fill", "blue");
+                                    this.attr("fill", "red");
                                     txtClicked = true;
                                     poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum};
                                     
