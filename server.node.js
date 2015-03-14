@@ -10,8 +10,8 @@ testing:
 // connect to db,
 var dijkstra = require("./js/dijkstra.js").dijkstra();
 var poiPath = require("./js/poiPath.js").poiPath();
-dijkstra.graph_file = "data/floor_1.json";
-poiPath.graph_file = "./data/floor_1.json";
+dijkstra.graph_file = "data/all_floors.json";
+poiPath.graph_file = "./data/all_floors.json";
 
 var async = require("async");
 

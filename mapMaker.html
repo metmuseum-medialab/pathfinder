@@ -123,10 +123,30 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
   	var mouseoverColor = "lightgreen";
   	var selectedColor= "blue";
 
+	var untypedCircles = [];
+	var currentUntypedCircle = -1;
+	var identifyingUntypedCircles = false;
+
+	$("#identifyUntypedCircles").click(function(){
+		console.log("clicked");
+		if(untypedCircles.length == 0){
+			return false;
+		}
+		identifyingUntypedCircles = true;
+		currentUntypedCircle = 0;
+		console.log(untypedCircles[currentUntypedCircle]);
+//		$(untypedCircles[currentUntypedCircle]).trigger("click");
+
+		var e = new jQuery.Event("click");
+		e.pageX = untypedCircles[currentUntypedCircle].attrs.cx;
+		e.pageY = untypedCircles[currentUntypedCircle].attrs.cy;
+		$("#mapelem").trigger(e);		
+
+	});
+
   	var paper;
 
-	  	$("#mapelem").height(imageHeight).width(imageWidth);
-
+	$("#mapelem").height(imageHeight).width(imageWidth);
 
   	Raphael("mapelem", imageWidth, imageHeight, function(context){
   		paper = this;
@@ -301,11 +321,16 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 
 	function mapElemClicked(evt){
 
+		console.log("map elem slicked");
 		if(mouseOverCircle){
 			circleClicked(evt, mouseOverCircle);
 			return;
 		}
 
+		if(identifyingUntypedCircles){
+			console.log("identifying");
+			circleClicked(evt, untypedCircles[currentUntypedCircle]);
+		}
 
 	    if (evt.stopPropagation) {
 	      evt.stopPropagation();
@@ -424,8 +449,6 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		});
 */
 	}
-	var untypedCircles = [];
-	var currentUntypedCircle = 0;
 	function loadGraph(graph){
 		$.each(graph.nodes, function(index, node){
 			// ajusting for offest, scale.
@@ -433,9 +456,12 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			node.y = (node.y * graphscaley) + graphoffsety;
 			var circle = createCircle(node.x, node.y);
 			$.each(node, function(index, value){
+//				console.log(index + " : " +  value);
 				circle.data(index, value);
 			});
-			if(!circle.data("nodetype") == ""){
+			console.log(circle.data("nodetype"));
+			if(!circle.data("nodetype") || circle.data("nodetype") == ""){
+				console.log("adding");
 				untypedCircles.push(circle);
 				$("#numUntypedCircles").text(untypedCircles.length);
 			}
@@ -728,6 +754,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		.append("<option value='pass'>passageway (or others in same gallery)</option>")
 		.append("<option value='elevator'>elevator</option>")
 		.append("<option value='wc'>bathroom</option>")
+		.append("<option value='waterfountain'>water fountain</option>")
+		.append("<option value='store'>store</option>")
 		.append("<option value='cafe'>cafe</option>")
 		.bind('change', function(evt){
 			console.log($(this).val());
@@ -784,8 +812,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			editfocus = false;
 		});
 
-		dialog.dialog( "option", "buttons", 
-		  [
+		var buttonsArray = [
 		    {
 		      text: "Delete",
 		      icons: {
@@ -811,8 +838,27 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		    	},
 		    	showText: false
 		    }
-		  ]
-		);
+		];
+
+		if(identifyingUntypedCircles){
+			console.log("pusshing");
+			buttonsArray.push(	
+			{	    	
+				text: "Next Untyped",
+		    	click: function(){
+					$("#dialog-form").empty();	
+					$( this ).dialog("close");	
+		    		currentUntypedCircle++;
+		    		currentUntypedCircle = currentUntypedCircle % untypedCircles.length;
+					var e = new jQuery.Event("click");
+					e.pageX = untypedCircles[currentUntypedCircle].attrs.cx;
+					e.pageY = untypedCircles[currentUntypedCircle].attrs.cy;
+					$("#mapelem").trigger(e);		
+		    	}
+		    });
+		}
+
+		dialog.dialog( "option", "buttons", buttonsArray);
 
 
 
@@ -884,8 +930,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			}).val(line.data("overrideLength")  );
 
 
-		dialog.dialog( "option", "buttons", 
-		  [
+		var buttonsArray = 
+		[
 		    {
 		      text: "Delete",
 		      icons: {
@@ -911,13 +957,27 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		    	},
 		    	showText: false
 		    }
-		  ]
-		);
+		];
 
-
-
-
-	}
+		if(identifyingUntypedCircles){
+			console.log("pusshing");
+			buttonsArray.push(	
+			{	    	
+				text: "Next Untyped",
+		    	click: function(){
+					$("#dialog-form").empty();	
+					$( this ).dialog("close");	
+		    		currentUntypedCircle++;
+		    		currentUntypedCircle = currentUntypedCircle % untypedCircles.length;
+					var e = new jQuery.Event("click");
+					e.pageX = untypedCircles[currentUntypedCircle].attrs.cx;
+					e.pageY = untypedCircles[currentUntypedCircle].attrs.cy;
+					$("#mapelem").trigger(e);		
+		    	}
+		    });
+		}
+		dialog.dialog( "option", "buttons", buttonsArray);		    
+	}	
 
 	function unsetSelectedLine(){
 
@@ -1035,7 +1095,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
           </ul>
         </li>
         <li class"unidentifiedHelp">
-        	<span id="numUntypedCircles">0</span> <span>circles need identification</span>
+        	<a href="#" id="identifyUntypedCircles"><span id="numUntypedCircles">0</span> <span>unidentified circles</span></a>
         </li>
 
        </ul>       

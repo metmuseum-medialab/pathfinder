@@ -22,14 +22,18 @@
             var fl1_L_url = "images/metmap_fl1_light.png";
             var fl1_C_url = "images/metmap_fl1_crowd.png";
             var fl1_N_url = "images/metmap_fl1_noise.png";
-            
+            var all_floors_url = "images/MuseumMapFullAug2014";
+
             var imgScale = .3;
             var vertShift = 0;
 
-
             // floor 1
+            /*
             var fl1_srcWidth = 3214; 
             var fl1_srcHeight = 2142; 
+            */
+            var fl1_srcWidth = 2750; 
+            var fl1_srcHeight = 4125; 
             var fl1_width = fl1_srcWidth * imgScale;
             var fl1_height = fl1_srcHeight * imgScale;
 
@@ -42,7 +46,7 @@
                 
                 paper = this; //this is valid within this functiom
                 
-                var fl1_paperImg = paper.image(fl1_url, 0,vertShift, fl1_width, fl1_height);
+                var fl1_paperImg = paper.image(all_floors_url, 0,vertShift, fl1_width, fl1_height);
                 
                 /*
                 fl1_paperImg.click(function(evt){
@@ -65,7 +69,7 @@
                 
                 // Draw circles that a user can click on to choose start and end point
                 var startNode = true;
-                $.getJSON('data/floor_1.json ', function(graph) {
+                $.getJSON('data/all_floors.json ', function(graph) {
                     $.each(graph.nodes, function(index, node) {
 
                         if (node.nodetype == "gallery") { 
