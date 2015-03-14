@@ -6,6 +6,7 @@
 
 <link href="css/bootstrap-responsive.css" rel="stylesheet">
 <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
 
 <style>
 #dialog-form {
@@ -18,15 +19,20 @@
 }
 
 .ui-dialog-titlebar {
-	 height: 32px; 
-}
+	padding: 2px;
+	}
 .ui-dialog-buttonpane  {
 	height: 20px;
 	font-size: .5em;
 }
-
+.ui-dialog-title {
+	font-size: .5em;
+	font-weight: normal;
+}
+.ui-dialog .ui-dialog-titlebar {
+	padding: .04em .2em;
+}
 </style>
-<link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
 
 
 
@@ -134,7 +140,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 	var papermapimage;
   	
 	var mode = "circlecreating"; // linedrawing , circledragging, circlecreating
-	$("#mode").text("circlecreating");
+//	$("#mode").text("circlecreating");
 
 	var currentCircle = false;
 	var selectedCircle = false;
@@ -340,7 +346,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 	    var y  = (evt.offsetY || evt.clientY - $(evt.target).offset().top);
 		if(mode == "circlecreating"){
 			// start drawing mode
-			$("#mode").text("linedrawing");
+			//$("#mode").text("linedrawing");
 
 			unsetSelectedCircle();
 			var circle = createCircle(x,y);
@@ -352,7 +358,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			endLine(circle);
 			// end linedrawing mode, go back to circlecreating mode 
 			mode = "circlecreating";
-			$("#mode").text("circlecreating");
+			//$("#mode").text("circlecreating");
 
 		}
 
@@ -495,18 +501,18 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 			unsetSelectedCircle();
 			destroyLine(currentLine);
 			mode = "circlecreating";
-			$("#mode").text("circlecreating");
+			//$("#mode").text("circlecreating");
 
 		}else if (mode == "linedrawing" ){
 			unsetSelectedCircle();
 			endLine(circle);
 			mode = "circlecreating";
-			$("#mode").text("circlecreating");
+			//$("#mode").text("circlecreating");
 
 		}else{
 			unsetSelectedCircle();
 			mode = "linedrawing";
-			$("#mode").text("linedrawing");
+			//$("#mode").text("linedrawing");
 
 			currentCircle = circle;
 			startLine(currentCircle);
@@ -690,6 +696,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		dialog.dialog("close");
 		$("#dialog-form").empty();
 		$("#dialog-form").dialog("option", "position", {my: "left top", at : "left top", of : evt });
+		$("#dialog-form").dialog("option", "title", "Point " + circle.id);
 		dialog.dialog("open");
 		$(dialog).bind('clickoutside',function(){
 			$(dialog).unbind('clickoutside');
@@ -712,7 +719,8 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		.append("<option value='pass'>pass</option>")
 		.append("<option value='stairs'>stairs</option>")
 		.append("<option value='elevator'>elevator</option>")
-		.append("<option value='wc'>wc</option>")
+		.append("<option value='wc'>bathroom</option>")
+		.append("<option value='cafe'>cafe</option>")
 		.bind('change', function(evt){
 			console.log($(this).val());
 			circle.data("nodetype", $(this). val());
@@ -818,6 +826,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		dialog.dialog("close");
 		$("#dialog-form").empty();
 		$("#dialog-form").dialog("option", "position", {my: "left top", at : "left top", of : evt });
+		$("#dialog-form").dialog("option", "title", "Line " + line.id);
 		dialog.dialog("open");
 		var first = true;	
 		$(dialog).bind('clickoutside',function(){
@@ -1003,8 +1012,7 @@ jQuery.fn.single_double_click = function(single_click_callback, double_click_cal
 		<div class="row-fluid" id="mapmetadata">
 			<div class="span2" >
 				<div class="row-fluid"  >
-					<div class="span12"  id="edit" >
-						edit
+					<div class="span12"  id="edit" >						
 					</div>
 				</div>
 			</div>
