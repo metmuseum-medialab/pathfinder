@@ -19,8 +19,10 @@ var urlparser = require("url");
 var fs = require("fs");
 var pathparser = require("path");
 
-var dataFilename = "graph.json";
+var dataFilename = "all_floors.json";
 var dataDir = "data/";
+var dataGraphs = {};
+var graphGalleryNodes = {};
 
 var jsdom = require("jsdom"); 
 $ = require("jquery")(jsdom.jsdom().createWindow()); 
@@ -96,10 +98,96 @@ function parseRequest(req, res){
   }else if (query.action == "getgraphlist"){
     getGraphList(req, res, query);
   
+  }else if (query.action == "getgallerynode"){
+    getGalleryNode(req, res, query);
   }else{
    res.writeHead(200, {'Content-Type': 'text/html'});
    res.end("<html><body><pre>not sure what to do</pre></body></html>");
   }
+
+}
+
+
+function loadGraphIntoMemory(graphName, callback, errorcallback){
+  dataFile = dataDir +  graphName;
+
+
+  if(!fs.file)
+
+  fs.readFile(dataFile, function(err, data) {
+    if(err){
+        errorcallback(err);
+        return;
+    }
+    console.log("data file");
+    console.log(data);
+
+
+    dataGraphs[graphName] = JSON.parse(data);
+    graphGalleryNodes[graphName] = {};
+
+    // create index of gallery nodes.
+    $.each(dataGraphs[graphName].nodes, function(index, node){
+      node.id = index;
+      if(node.galnum && node.galnum.trim() != ""){
+        graphGalleryNodes[graphName][node.galnum.trim()] = node;
+      }
+    });
+
+    callback();    
+
+  });
+
+}
+
+//http://66.175.215.36/pathfinder/?action=getgallerynode&graphName=all_floors.json&gallerynumber=354
+
+function getGalleryNode(req, res, query){
+
+    var graphName = query.graphName;
+    var galleryNumber = query.gallerynumber;
+
+
+    if(!graphGalleryNodes[graphName]){
+      loadGraphIntoMemory(graphName, function(){
+        var galleryNode = graphGalleryNodes[graphName][galleryNumber];
+
+        if(galleryNode){
+          var contentType = "application/json";
+          res.writeHead(200, {'Content-Type': contentType});
+          res.end(JSON.stringify(galleryNode));
+          return;
+        }else{
+          var contentType = "application/json";
+          res.writeHead(200, {'Content-Type': contentType});
+          res.end(JSON.stringify({result: "bad", message: "Gallery Number "+ galleryNumber+" not found " }));
+          return;          
+        }
+      },
+      function(err){
+        var contentType = "application/json";
+        res.writeHead(200, {'Content-Type': contentType});
+        res.end(JSON.stringify({result: "bad", message: "Gallery Number not found " + err}));
+        return;
+
+      });
+
+    }else{
+        var galleryNode = graphGalleryNodes[graphName][galleryNumber];
+        if(galleryNode){
+          var contentType = "application/json";
+          res.writeHead(200, {'Content-Type': contentType});
+          res.end(JSON.stringify(galleryNode));
+          return;
+        }else{
+          var contentType = "application/json";
+          res.writeHead(200, {'Content-Type': contentType});
+          res.end(JSON.stringify({result: "bad", message: "Gallery Number " + galleryNumber + " not found "}));
+          return;          
+        }
+
+    }
+
 
 }
 

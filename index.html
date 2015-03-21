@@ -17,6 +17,24 @@
 
             var userPrefs = {light: 0, crowd: 0, noise: 0};
 
+            var userPrefsText = {
+                light : {
+                    0 : "Don't Care",
+                    1 : "Bright",
+                    2 : "Subdued"
+                },
+                crowd : {
+                    0 : "Don't Care",
+                    1 : "Lively",
+                    2 : "Uncrowded"
+                },
+                noise : {
+                    0 : "Don't Care",
+                    1 : "Loud",
+                    2 : "Quiet"
+                }
+            }
+
            // map vars 
             var map_image_url = "images/MuseumMapFullAug2014.jpg";
 
@@ -43,26 +61,7 @@
                 paper = this; //this is valid within this functiom
                 
                 var map_paperImg = paper.image(map_image_url, 0,vertShift, map_width, map_height);
-                
-                /*
-                map_paperImg.click(function(evt){
-                    console.log("you clicked the map");
-                    map_paperImg = paper.image(map_url, 0,vertShift, map_width, map_height);
-                });
-                */
-
-                /*
-                $(window).keypress(function (evt){
-                    if(evt.charCode == 1){ // 'return' is pressed 
-                        map_paperImg = paper.image(map_url, 0,0, map_width, map_height);
-                    } 
-                    if(evt.charCode == 2){ // 'return' is pressed 
-                        map_L_paperImg = paper.image(map_L_url, 0,0, map_width, map_height);
-                    } 
-                });                
-                */
-                //fl2_paperImg = paper.image(fl2_url, 0,map_height+padding, fl2_width, fl2_height);
-                
+                    
                 // Draw circles that a user can click on to choose start and end point
                 var startNode = true;
                 $.getJSON('data/all_floors.json ', function(graph) {
@@ -124,70 +123,6 @@
                                 }
                             });
 
-                            /*
-                            var circleClicked = false;
-
-                            var circleDraw = paper.circle(node.x, node.y+vertShift, 10);
-
-                            circleDraw.id  = index;
-                            circleDraw.attr("stroke","black");
-                            circleDraw.attr("stroke-width",.7);
-                            circleDraw.attr("fill", "white");
-                            circleDraw.attr("fill-opacity","0");
-
-                            // Assign events
-                            
-                            circleDraw.click(function(evt){
-
-                                var poi_id = this.id;
-                                var nodeType;
-
-                                //console.log(graph.nodes[this.id]);
-                                if (circleClicked == false) {
-
-                                    if (startNode == true) {
-                                    nodeType = "start";
-                                    startNode = false;
-                                    } else {
-                                    nodeType = "poi";
-                                    }
-
-                                    console.log(nodeType);
-
-                                    this.attr("stroke", "blue");
-                                    this.attr("stroke-width", 3);
-                                    //this.attr("fill", "#73c21f");
-                                    this.attr("fill-opacity", "0");
-                                    circleClicked = true;
-                                    poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType};
-                                    
-                                } else {
-                                    //this.attr("fill", "white");
-                                    //this.attr("fill-opacity", ".3");
-                                    circleClicked = false;
-                                    delete poi_set[poi_id];
-                                }
-                                console.log(circleDraw);
-                            });
-                            
-                            circleDraw.mouseover(function(evt){
-                                if (circleClicked == false) {
-                                    this.attr("stroke", "#eb603b");
-                                    this.attr("stroke-width", 2);
-                                    //this.attr("fill", "white");
-                                    //this.attr("fill-opacity", ".3");
-                                }
-                            });
-
-                            circleDraw.mouseout(function(evt){
-                                if (circleClicked == false) {
-                                    circleDraw.attr("stroke","black");
-                                circleDraw.attr("stroke-width",.7);
-                                    this.attr("fill", "white");
-                                    this.attr("fill-opacity", "0");
-                                }
-                            });
-                            */ 
                         }
                     });
                 });
@@ -272,49 +207,49 @@
 
         // Drop down menues for access pref user input
 
-        $("#editPrefs").empty();
 
-        var form = $("<form>").appendTo("#editPrefs");
+        $("<li><a href='#'>"+userPrefsText['light'][1]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
+            userPrefs.light = 1;
+            $(".lightlevel.dropdown > a > .prefvalue").text(userPrefsText['light'][1]);
+        });
+        $("<li><a href='#'>"+userPrefsText['light'][2]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
+            userPrefs.light = 2;
+            $(".lightlevel.dropdown > a > .prefvalue").text(userPrefsText['light'][2]);
+        });
+        $("<li><a href='#'>"+userPrefsText['light'][0]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
+            userPrefs.light = 0;
+            $(".lightlevel.dropdown > a > .prefvalue").text(userPrefsText['light'][0]);
+        });
+        $(".lightlevel.dropdown > a > .prefvalue").text(userPrefsText['light'][userPrefs.light]);
 
-        var lightSelect = $("<span>Light Level:</span><select name='lightlevel'><BR>").appendTo(form);
-        lightSelect.append("<option value='0'>Select Light Level...</option>")
-        lightSelect.append("<option value='1'>Bright</option>")
-        .append("<option value='2'>Dark and subdued</option>")
-        .append("<option value='0'>Don't care</option>")
-        .bind('change', function(evt){
-            console.log($(this).val());
-            userPrefs.light = $(this).val();
-            console.log(userPrefs);
-        });
 
-        var crowdSelect = $("<span>Crowd Level:</span><select name='crowdlevel'><BR>").appendTo(form);
-        crowdSelect.append("<option value='0'>Select Crowd Level...</option>")
-        crowdSelect.append("<option value='2'>Uncrowded and calm</option>")
-        .append("<option value='1'>Crowded and lively</option>")
-        .append("<option value='0'>Don't care</option>")
-        .bind('change', function(evt){
-            console.log($(this).val());
-            userPrefs.crowd = $(this).val();
-            console.log(userPrefs);
+        $("<li><a href='#'>"+userPrefsText['crowd'][1]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
+            userPrefs.crowd = 1;
+            $(".crowdlevel.dropdown > a > .prefvalue").text(userPrefsText['crowd'][1]);
         });
+        $("<li><a href='#'>"+userPrefsText['crowd'][2]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
+            userPrefs.crowd = 2;
+            $(".crowdlevel.dropdown > a > .prefvalue").text(userPrefsText['crowd'][2]);
+        });
+        $("<li><a href='#'>"+userPrefsText['crowd'][0]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
+            userPrefs.crowd = 0;
+            $(".crowdlevel.dropdown > a > .prefvalue").text(userPrefsText['crowd'][0]);
+        });
+        $(".crowdlevel.dropdown > a > .prefvalue").text(userPrefsText['crowd'][userPrefs.crowd]);
 
-        var noiseSelect = $("<span>Noise Level:</span><select name='noiselevel'><BR>").appendTo(form);
-        noiseSelect.append("<option value='0'>Select Noise Level...</option>")
-        noiseSelect.append("<option value='2'>Quiet</option>")
-        .append("<option value='1'>Lively</option>")
-        .append("<option value='0'>Don't care</option>")
-        .bind('change', function(evt){
-            console.log($(this).val());
-            userPrefs.noise = $(this).val();
-            console.log(userPrefs);
+        $("<li><a href='#'>"+userPrefsText['noise'][1]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
+            userPrefs.noise = 1;
+            $(".noiselevel.dropdown > a > .prefvalue").text(userPrefsText['noise'][1]);
         });
-
-        $(":input" ,form).focus(function(){
-            editfocus = true;
+        $("<li><a href='#'>"+userPrefsText['noise'][2]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
+            userPrefs.noise = 2;
+            $(".noiselevel.dropdown > a > .prefvalue").text(userPrefsText['noise'][2]);
         });
-        $(":input" ,form).blur(function(){
-            editfocus = false;
+        $("<li><a href='#'>"+userPrefsText['noise'][0]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
+            userPrefs.noise = 0;
+            $(".noiselevel.dropdown > a > .prefvalue").text(userPrefsText['noise'][0]);
         });
+        $(".noiselevel.dropdown > a > .prefvalue").text(userPrefsText['noise'][userPrefs.noise]);
     });
    </script>
 </head>
@@ -329,19 +264,32 @@
             <span class="icon-bar"></span>
           </button>
           <a class="navbar-brand" href="#">Accessible Wayfinder MVP3</a>
-        </div>     
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">   
+                <li class="dropdown lightlevel">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Light Level: <span class="prefvalue"></span><span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                    </ul>
+                </li>
+                <li class="dropdown crowdlevel">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Crowd Level: <span class="prefvalue"></span><span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                    </ul>
+                </li>
+                <li class="dropdown noiselevel">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Noise Level: <span class="prefvalue"></span><span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                    </ul>
+                </li>
+            </ul>
+
+
     </div>
 </nav>
 </div>
 <div class="row-constant" id="mapmetadata">
-    <div class="span2" >
-        <div class="row-fluid"  >
-            <div class="span12"  id="editPrefs" >
-                edit
-            </div>
-        </div>
-    </div>
-    <div class="span10" id="mapelem" ></div>
+    <div class="span12" id="mapelem" ></div>
 </div>  
 </body>
 </html>
