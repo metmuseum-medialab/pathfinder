@@ -71,6 +71,7 @@
             var map_height = map_srcHeight * imgScale;
 
             var paper; // "canvas"
+            var startNode = true;
 
             var poi_set;
 
@@ -84,7 +85,6 @@
                 var map_paperImg = paper.image(map_image_url, 0,vertShift, map_width, map_height);
                     
                 // Draw circles that a user can click on to choose start and end point
-                var startNode = true;
                 $.getJSON('data/all_floors.json ', function(graph) {
                     console.log("got data");
                     console.log(graph);
