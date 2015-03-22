@@ -100,6 +100,8 @@ function parseRequest(req, res){
   
   }else if (query.action == "getgallerynode"){
     getGalleryNode(req, res, query);
+  }else if(query.action == "search"){
+    searchScrapi(req, res, query);
   }else{
    res.writeHead(200, {'Content-Type': 'text/html'});
    res.end("<html><body><pre>not sure what to do</pre></body></html>");
@@ -107,6 +109,16 @@ function parseRequest(req, res){
 
 }
 
+
+function searchScrapi(req, res, query){
+  var term = query.term;
+  var scrapiurl = "http://scrapi.org/search/" +encodeURIComponent(term);
+  var request = require("request");
+  request(scrapiurl, function(error, response, body){
+    res.writeHead(response.statusCode, response.headers['content-type']);
+    res.end(body);
+  });
+}
 
 function loadGraphIntoMemory(graphName, callback, errorcallback){
   dataFile = dataDir +  graphName;
