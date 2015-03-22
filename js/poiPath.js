@@ -150,7 +150,7 @@ function poiPath(){
             var shortestEdgeID;
 //            var edgepn2 = startnode;
 
-
+  console.log(curNode + " ))))");
             // cycle through outEdges
             $.each(poi_set[curNode].outEdges, function(index, edge){
               // look for an unvisited node on the other end of the edge

@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,9 +8,28 @@
     <!-- <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script> -->
     <link href="css/bootstrap-responsive.css" rel="stylesheet">
     <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+
+<style>
+.searchresult .info{
+    font-size: .8em;
+    font-weight: normal;
+    font-family: sans-serif;
+    padding-bottom: 5px
+}
+.searchresult .object{
+}
+.searchresult .image > img {
+    width: 75px;
+    padding-bottom: 5px;
+}
+
+</style>
     <script src="js/jquery-1.11.0.min.js"></script>
 
     <script src="js/bootstrap.min.js"></script>
+
+    <script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
+
     <script type="text/javascript" src="js/raphael-min.js"></script>
     <script language='javascript'>
         $( document ).ready(function() {
@@ -52,7 +71,9 @@
             var map_height = map_srcHeight * imgScale;
 
             var paper; // "canvas"
-            
+
+            var poi_set;
+
             $("#mapelem").height(map_height+vertShift).width(map_width);
 
             Raphael("mapelem", map_width, map_height+vertShift, function(
@@ -102,6 +123,7 @@
                                     this.attr("fill", "red");
                                     txtClicked = true;
                                     poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum};
+                                    drawWaypoints();
                                     
                                     console.log(node);
                                 } else {
@@ -127,38 +149,35 @@
                     });
                 });
 
-                $(window).keypress(function (evt){
-                    if(evt.charCode == 13){ // 'return' is pressed 
-                        //Add start point (museum entrance)
-                        //poi_set["481_599"] = {x: 481, y: 599, type: "start"};
-                        // Run the Dijkstra algorithm via server
-                        var poiData = JSON.stringify(poi_set);
-                        var prefData = JSON.stringify(userPrefs);
-                        var thedata = {poi: poiData, prefs: prefData};
-                        console.log(thedata);
-                        //console.log(poiData);
-                        $.ajax({
-                            url : "?action=poiPath" ,
-                            data : {poi: poiData, prefs: prefData},
-                            //type : "PUT",
-                            contentType : 'json',
-                            // processData : false,
-                            success : function(poiPath, status){
-                                console.log("Received poiPath data from server!!!");
-                                console.log(poiPath);
-                                drawPath(poi_set, poiPath);
-                            },
-
-                            error : function(jqXHR, status, message){
-                                console.log("poiPath ajax error (index_mvp3.html)");
-                                console.log(status);
-                                console.log(message);
-                            }
-                        });   
-                    }
-                });                
             });
             
+
+            function pathIt(){
+                var poiData = JSON.stringify(poi_set);
+                var prefData = JSON.stringify(userPrefs);
+                var thedata = {poi: poiData, prefs: prefData};
+                console.log(thedata);
+                //console.log(poiData);
+                $.ajax({
+                    url : "?action=poiPath" ,
+                    data : {poi: poiData, prefs: prefData},
+                    //type : "PUT",
+                    contentType : 'json',
+                    // processData : false,
+                    success : function(poiPath, status){
+                        console.log("Received poiPath data from server!!!");
+                        console.log(poiPath);
+                        drawPath(poi_set, poiPath);
+                    },
+
+                    error : function(jqXHR, status, message){
+                        console.log("poiPath ajax error (index_mvp3.html)");
+                        console.log(status);
+                        console.log(message);
+                    }
+                });   
+            }
+
             function drawPath(poi_set, poiPath) {
                 console.log("About to draw the path!")
 
@@ -204,6 +223,111 @@
                 });
                 */
             } 
+
+        function drawWaypoints(){
+            //iterate through poi_set
+            $(".waypoints.dropdown > .dropdown-menu").empty();
+            console.log(poi_set);
+            $(".waypoints_count").text(Object.keys(poi_set).length);
+            $.each(poi_set, function(index, poi){
+                (function(_poi, _index){
+                    $("<li><a href='#'>Gallery "+poi.galnum+" --- <b>X</b></a></li>").appendTo(".waypoints.dropdown > .dropdown-menu").click(function(){
+                        // remove
+                        delete poi_set[_index];
+                        drawWaypoints();
+                    });
+                })(poi, index);
+            });
+        }
+
+
+        $(".btn.pathit").click(function(){
+            console.log("pathing it");
+            pathIt();
+            return false;
+        });
+
+        // search menu setup
+        // poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum};
+        $(".search > input").keyup(function(evt){
+            var term = $(".form-group.search > input").val();
+            $.ajax({
+                url : "?action=search&term="+encodeURIComponent(term),
+                data : {term: term, graphName: "all_floors.json"},
+                //type : "PUT",
+                contentType : 'json',
+                // processData : false,
+                success : function(results, status){
+                    console.log(results);
+                    var results = JSON.parse(results);
+                    console.log(results);
+                    $("#searchresults").empty();
+                    $(".dropdown-menu.search").dropdown("toggle");
+                            $(".dropdown-menu.search").show();
+
+                    $.each(results.collection.items, function(index, item){
+                        if(item.gallery.toString().match(/not on view/i)){
+                            return true;
+                        }
+
+                        var itemelem = $("<div class='container-fluid'/>").appendTo("#searchresults");
+                        var objectdiv = $("<div class='searchresult object row' />").appendTo(itemelem);
+                        var imagediv = $("<div class='searchresult image col-sm-4'  />").appendTo(objectdiv);
+                        var infodiv = $("<div class='searchresult info col-sm-8'  />").appendTo(objectdiv);
+                        $(imagediv).append("<img src='"+item.image_thumb+"'/>");
+                        var title = item.title;
+                        if(title.length > 30){
+                            title = title.substring(0,25) + "...";
+                        }
+                        $(infodiv).append(title+"<br/>");
+                        $(infodiv).append(item.accession_number+"<br/>");
+                        $(infodiv).append(item.artist+"<br/>");
+                        $(infodiv).append("Gallery: <span class='galnum'>" +item.gallery+"</span><br/>");
+                        $(itemelem).click(function(){
+                            var galnum = $(".galnum", this).text();
+                            console.log(galnum);
+                            console.log("clicked");
+                            $(".dropdown-menu.search").hide();
+                            if(!galnum.match(/not on view/i)){
+                                // get graph node info
+                                var url = "?action=getgallerynode&graphName=all_floors.json&gallerynumber="+encodeURIComponent(galnum);
+                                
+                                $.ajax({
+                                    url: url,
+                                    contentType : 'json',
+                                    // processData : false,
+                                    success : function(results, status){
+                                        console.log(results);
+                                        if (startNode == true) {
+                                            results.type = "start";
+                                            startNode = false;
+                                        } else {
+                                            results.type = "poi";
+                                        }                                        
+                                        poi_set[results.id] = results;
+                                        drawWaypoints();
+                                    },
+                                    error : function(jqXHR, status, message){
+                                        console.log("scarpi search ajax error ");
+                                        console.log(status);
+                                        console.log(message);
+                                    }
+                                });
+
+                            }
+                        });
+                    });
+                },
+
+                error : function(jqXHR, status, message){
+                    console.log("scarpi search ajax error ");
+                    console.log(status);
+                    console.log(message);
+                }
+            });   
+        });
+
+
 
         // Drop down menues for access pref user input
 
@@ -282,8 +406,26 @@
                     <ul class="dropdown-menu" role="menu">
                     </ul>
                 </li>
+  
+                <li class="dropdown waypoints">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Waypoints <span class="waypoints_count"></span><span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                    </ul>
+                </li>
+                <li class="dropdown search">
+
+                    <form class="navbar-form navbar-left" role="search">
+                      <div class="form-group search">
+                        <input type="text" class="form-control" id="search_entry" placeholder="Search Gallery or Object">
+                      </div>
+                      <ul class="dropdown-menu search" id="searchresults" role="menu"></ul>                      
+                      <button type="submit" class="pathit btn btn-default">Path it!</button>
+                    </form>
+                </li>
+
             </ul>
 
+        </div>
 
     </div>
 </nav>
@@ -291,5 +433,6 @@
 <div class="row-constant" id="mapmetadata">
     <div class="span12" id="mapelem" ></div>
 </div>  
+
 </body>
 </html>
