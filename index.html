@@ -178,9 +178,27 @@
                 });   
             }
 
+            function clearPath(){
+                var deleteables = [];
+                paper.forEach(function (el){
+                    console.log(el);
+                    if(el.data("delete_on_clear")){
+                        //el.remove();
+                        deleteables.push(el);
+                    }else{
+                        console.log("not deleting");
+                    }
+                });
+                $.each(deleteables, function(index, item){
+                    item.remove();
+                });
+            }
+
+
             function drawPath(poi_set, poiPath) {
                 console.log("About to draw the path!")
 
+                clearPath();
                 // make circles
                 /*$.each(poi_set, function(index, node) {
                     var circle = paper.circle(node.x, node.y, 5);
@@ -200,12 +218,13 @@
                         var line = paper.path(pathString);
                         line.attr("stroke","black");
                         line.attr("stroke-width",2);
-                        console.log(edge);
+                        line.data("delete_on_clear", true);
                         // number the points
                         var halfx = (edge.sx + edge.ex) / 2;
                         var halfy = (edge.sy + edge.ey) / 2 ;
-                        console.log(halfx);
                         var ident = paper.text(halfx, halfy, index);
+                        ident.data("delete_on_clear", true);
+
                         ident.attr("fill", "red");
                         ident.attr("fill-opacity",.5);
 
@@ -244,6 +263,12 @@
         $(".btn.pathit").click(function(){
             console.log("pathing it");
             pathIt();
+            return false;
+        });
+
+        $(".btn.clearpath").click(function(){
+            console.log("clearing it");
+            clearPath();
             return false;
         });
 
@@ -420,6 +445,7 @@
                       </div>
                       <ul class="dropdown-menu search" id="searchresults" role="menu"></ul>                      
                       <button type="submit" class="pathit btn btn-default">Path it!</button>
+                      <button type="submit" class="clearpath btn btn-default">Clear</button>
                     </form>
                 </li>
 
