@@ -131,6 +131,13 @@
                                     txtClicked = false;
                                     delete poi_set[poi_id];
                                 }
+                                (function(_poi_id, _point){
+                                    eve.on("clear.waypoints", function(){
+                                        _point.attr("fill", "black");
+                                        txtClicked = false;
+                                        delete poi_set[_poi_id];
+                                    }); 
+                                })(poi_id, this);
                             });
                             
                             txtDraw.mouseover(function(evt){
@@ -144,7 +151,6 @@
                                     this.attr("fill-opacity", .5);
                                 }
                             });
-
                         }
                     });
                 });
@@ -179,21 +185,11 @@
             }
 
             function clearPath(){
-                var deleteables = [];
-                paper.forEach(function (el){
-                    console.log(el);
-                    if(el.data("delete_on_clear")){
-                        //el.remove();
-                        deleteables.push(el);
-                    }else{
-                        console.log("not deleting");
-                    }
-                });
-                $.each(deleteables, function(index, item){
-                    item.remove();
-                });
+                eve("clear.path");
             }
-
+            function clearWaypoints(){
+                eve("clear.waypoints");
+            }
 
             function drawPath(poi_set, poiPath) {
                 console.log("About to draw the path!")
@@ -218,17 +214,25 @@
                         var line = paper.path(pathString);
                         line.attr("stroke","black");
                         line.attr("stroke-width",2);
-                        line.data("delete_on_clear", true);
+                        (function(_line){
+                            console.log("attaching");
+                            eve.on("clear.path", function(){
+                                console.log("clear line");
+                                _line.remove();
+                            })
+                        })(line);
                         // number the points
                         var halfx = (edge.sx + edge.ex) / 2;
                         var halfy = (edge.sy + edge.ey) / 2 ;
                         var ident = paper.text(halfx, halfy, index);
-                        ident.data("delete_on_clear", true);
-
                         ident.attr("fill", "red");
                         ident.attr("fill-opacity",.5);
-
                         ident.attr("font-size", 20);
+                        (function(_ident){
+                            eve.on("clear.path", function(){
+                                _ident.remove();
+                            })
+                        })(ident);
                     });
                 });
                 /*
@@ -251,7 +255,11 @@
             $.each(poi_set, function(index, poi){
                 (function(_poi, _index){
                     $("<li><a href='#'>Gallery "+poi.galnum+" --- <b>X</b></a></li>").appendTo(".waypoints.dropdown > .dropdown-menu").click(function(){
-                        // remove
+                            // remove
+                            delete poi_set[_index];
+                            drawWaypoints();
+                        });
+                    eve.on("clear.waypoints", function(){
                         delete poi_set[_index];
                         drawWaypoints();
                     });
@@ -269,6 +277,7 @@
         $(".btn.clearpath").click(function(){
             console.log("clearing it");
             clearPath();
+            clearWaypoints();
             return false;
         });
 
