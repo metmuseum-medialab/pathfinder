@@ -23,6 +23,16 @@
     padding-bottom: 5px;
 }
 
+.unfortunateMessages  { 
+    font-color: red;
+    color: red;
+    padding: 2px;
+}
+
+.waypoint_list > img {
+    width: 75px;    
+}
+
 </style>
     <script src="js/jquery-1.11.0.min.js"></script>
 
@@ -54,6 +64,14 @@
                 }
             }
 
+
+            eve.on("unfortunate", function(args){
+                console.log("unfortunate");
+                console.log(args);
+                $("#unfortunateMessages").modal();
+                $(".modal-content", "#unfortunateMessages").text("Sorry! " + args.message);
+            });
+
            // map vars 
             var map_image_url = "images/MuseumMapFullAug2014.jpg";
 
@@ -72,8 +90,9 @@
 
             var paper; // "canvas"
             var startNode = true;
+            var startNodeId = false;
 
-            var poi_set;
+            var poi_set = {};
 
             $("#mapelem").height(map_height+vertShift).width(map_width);
 
@@ -114,15 +133,16 @@
                                 if (txtClicked == false) {
 
                                     if (startNode == true) {
-                                    nodeType = "start";
-                                    startNode = false;
+                                        nodeType = "start";
+                                        startNode = false;
+                                        startNodeId = poi_id;
                                     } else {
-                                    nodeType = "poi";
+                                        nodeType = "poi";
                                     }
 
                                     this.attr("fill", "red");
                                     txtClicked = true;
-                                    poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum};
+                                    poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum, elem: this};
                                     drawWaypoints();
                                     
                                     console.log(node);
@@ -189,6 +209,7 @@
             }
             function clearWaypoints(){
                 eve("clear.waypoints");
+                startNodeId = false;
             }
 
             function drawPath(poi_set, poiPath) {
@@ -235,16 +256,6 @@
                         })(ident);
                     });
                 });
-                /*
-                $.each(poi_set, function(index, node) {
-                    var txtHL = paper.text(node.x, node.y+vertShift, node.galnum);
-                        console.log("node.galnum:");
-                        console.log(node.galnum);
-                        txtDraw.attr("fill", "red");
-                        txtDraw.attr("fill-opacity",1);
-                        txtDraw.attr("font-size", 20);
-                });
-                */
             } 
 
         function drawWaypoints(){
@@ -254,11 +265,60 @@
             $(".waypoints_count").text(Object.keys(poi_set).length);
             $.each(poi_set, function(index, poi){
                 (function(_poi, _index){
-                    $("<li><a href='#'>Gallery "+poi.galnum+" --- <b>X</b></a></li>").appendTo(".waypoints.dropdown > .dropdown-menu").click(function(){
-                            // remove
-                            delete poi_set[_index];
+                    var listitem = $("<li class='waypoint_list'/>");
+                    var objectitem = $("");
+                    if(_poi.objectinfo){
+                        objectitem = $("<img src='"+_poi.objectinfo.image_thumb+"' />")
+                    }
+                    var startelem = $("<BR><span><span>");
+                    console.log(startNodeId + " : " + _index);
+                    if(_index == startNodeId){
+                        $(startelem).text("start");
+                    }else{
+                        $(startelem).text("start here instead");
+                        $(startelem).click(function(){
+                            console.log("start node id is" + startNodeId);
+                            console.log(poi_set);
+                            console.log(poi_set[startNodeId]);
+                            poi_set[startNodeId].type = "poi";
+                            startNodeId = _index;
+                            poi_set[startNodeId].type = "start";
                             drawWaypoints();
                         });
+                    }
+
+
+
+                    var textitem = $("<a href='#'>Gallery "+poi.galnum+"</a>");
+                    var removeitem = $("<b>remove</b>").click(function(){
+                            // remove
+                            if(poi_set[_index].elem){
+                                poi_set[_index].elem.attr("fill", "black");
+                            }
+                            delete poi_set[_index];
+                            if(startNodeId == _index){
+                                console.log("removed a start item");
+                                startNodeId = false;
+                                if(Object.keys(poi_set).length > 0){
+                                    console.log("setting to another");
+                                    console.log(Object.keys(poi_set)[0]);
+                                    // pick another point as the start.
+                                    poi_set[Object.keys(poi_set)[0]].type = "start";
+                                    console.log(poi_set[Object.keys(poi_set)[0]]);
+                                    startNodeId = Object.keys(poi_set)[0];
+                                }
+                            }
+                            console.log("redrawing");
+                            drawWaypoints();
+                        });
+
+                    $(".waypoints.dropdown > .dropdown-menu").append(listitem);
+                    $(listitem).append(objectitem);
+                    $(listitem).append(textitem);
+                    $(listitem).append(removeitem);
+                    $(listitem).append(startelem);
+                    $(listitem).append("<hr/>");
+
                     eve.on("clear.waypoints", function(){
                         delete poi_set[_index];
                         drawWaypoints();
@@ -330,19 +390,27 @@
                                     url: url,
                                     contentType : 'json',
                                     // processData : false,
-                                    success : function(results, status){
-                                        console.log(results);
+                                    success : function(results2, status){
+                                        console.log(results2);
+                                        if(results2.result == "bad"){
+                                            // don't add to the list, send out an error message
+                                            eve("unfortunate", item, {message : "that object isn't in a known gallery"});
+                                            return;
+                                        }
                                         if (startNode == true) {
-                                            results.type = "start";
+                                            console.log("setting start node t0 " + results2.id )
+                                            results2.type = "start";
                                             startNode = false;
+                                            startNodeId = results2.id;
                                         } else {
-                                            results.type = "poi";
-                                        }                                        
-                                        poi_set[results.id] = results;
+                                            results2.type = "poi";
+                                        }
+                                        results2.objectinfo = item;
+                                        poi_set[results2.id] = results2;
                                         drawWaypoints();
                                     },
                                     error : function(jqXHR, status, message){
-                                        console.log("scarpi search ajax error ");
+                                        console.log("scrapi search ajax error ");
                                         console.log(status);
                                         console.log(message);
                                     }
@@ -468,6 +536,11 @@
 <div class="row-constant" id="mapmetadata">
     <div class="span12" id="mapelem" ></div>
 </div>  
-
+<div id="unfortunateMessages" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="unfortunateMessages modal-content">
+    </div>
+  </div>
+</div>
 </body>
 </html>
