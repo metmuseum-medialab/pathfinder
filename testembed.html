@@ -39,18 +39,24 @@
 	<script> 
 	$( document ).ready(function() {
 		var embed1 = $("#embed_map_here").metPathfinder({name : "embed1"}).data("metPathfinder");
+        embed1.setupMap(function(){
+            
+            embed1.options.poi_set[0] =  {objectinfo : {id :  '35683'}, type : "start"};
+            embed1.options.poi_set[1] = {objectinfo : {id :  '23026'}, type : "poi"};
+            embed1.pathIt();    
+            
+        });
+
+
+
 
 		$("#embed_map_here").bind("poi_added", function(options){
 			console.log("poi_added");
-			drawWaypoints();
+			renderWaypointsList();
 		});
 		$("#embed_map_here").bind("poi_deleted", function(options){
 			console.log("poi_deleted");
-		});
-
-		$("#clicktest").click(function(){
-			console.log("trying clicktest");
-			embed1.pathIt();
+            renderWaypointsList();
 		});
 
         $("#embed_map_here").bind("unfortunate", function(args){
@@ -67,16 +73,15 @@
             $(".modal-content", "#unfortunateMessages").text("Sorry! " + args.message);
         });
 
-
-		embed1.setupMap();
-
         function clearWaypoints(){
             eve("clear.waypoints");
             startNodeId = false;
         }
 
 
-        function drawWaypoints(){
+
+
+        function renderWaypointsList(){
             //iterate through poi_set
             $(".waypoints.dropdown > .dropdown-menu").empty();
             console.log(embed1.options.poi_set);
@@ -96,11 +101,9 @@
                         $(startelem).text("start here instead");
                         $(startelem).click(function(){
                         	embed1.setStartNode(_index);
-                            drawWaypoints();
+                            renderWaypointsList();
                         });
                     }
-
-
 
                     var textitem = $("<a href='#'>Gallery "+poi.galnum+"</a>");
                     var removeitem = $("<b>remove</b>").click(function(){
@@ -122,7 +125,7 @@
                                 }
                             }
                             console.log("redrawing");
-                            drawWaypoints();
+                            renderWaypointsList();
                         });
 
                     $(".waypoints.dropdown > .dropdown-menu").append(listitem);
@@ -134,7 +137,7 @@
 
                     eve.on("clear.waypoints", function(){
                         delete embed1.options.poi_set[_index];
-                        drawWaypoints();
+                        renderWaypointsList();
                     });
                 })(poi, index);
             });
@@ -203,7 +206,7 @@
 		                                }
 		                                results2.objectinfo = item;
 		                                embed1.options.poi_set[results2.id] = results2;
-		                                drawWaypoints();
+		                                renderWaypointsList();
 
 		                            },
 		                            function(jqXHR, status, message){
