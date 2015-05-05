@@ -10,7 +10,27 @@ function poiPath(){
 
     graph_file : false,
 
-    poiPathCalc : function (poi, prefs, callback) {
+    poiPathCalc : function (poi_set, prefs, callback) {
+      console.log("in poiPathCalc");
+      console.log(poi_set);
+
+
+      // let's make the "start" node the first in the array.
+      var new_poi_set = {};
+      $.each(poi_set, function(index, poi){
+        if(poi.type=="start"){
+          new_poi_set[index] = poi;
+        }
+      });
+      $.each(poi_set, function(index, poi){
+        if(poi.type!="start"){
+          new_poi_set[index] = poi;
+        }
+      });
+      poi_set = new_poi_set;
+      console.log(poi_set);
+
+
 
       var userPrefs = prefs;
 
@@ -19,7 +39,6 @@ function poiPath(){
 
       var poiPerm = {};
 
-      poi_set = JSON.parse(poi);
 
       var startPoint = false;
       var edgepn2 = false;
@@ -86,6 +105,8 @@ function poiPath(){
       }, function(err){
         // if any of the saves produced an error, err would equal that error
         if( err ) {
+          console.log("there was an error");
+          console.log(err);
           // One of the iterations produced an error.
           // All processing will now stop.
         } else {
@@ -97,7 +118,7 @@ function poiPath(){
           // SETUP
 
           // Set the start point
-          
+          console.log("setting curnode to startpoint " + startPoint);
           var curNode = startPoint; // Set the current node
           
           $.each(poiPerm, function(index, path) {
@@ -145,7 +166,7 @@ function poiPath(){
 
 
           function NearestNeighbor(startnode){
-
+console.log("in NearestNeighbor");
             var shortestEdge = Infinity;
             var shortestEdgeID;
 //            var edgepn2 = startnode;
@@ -187,6 +208,7 @@ function poiPath(){
               }
               console.log("edgepn2 is " + edgepn2);
               if(edgepn2 && edge.n1 != edgepn2){
+                console.log("flipping");
                 edgeflip = true;
                 var tempvar = edge.ey;
                 edge.ey = edge.sy;
@@ -201,9 +223,11 @@ function poiPath(){
               edgepn2 = edge.n2;
 
               if(index == 0){
+                console.log("setting startsAtPoi " + edge.n1 );
                 edge.startsAtPoi = poi_set[edge.n1];
               }
               if(index == poiPerm[shortestEdgeID].edges_array.length - 1){
+                console.log("setting endsAtPoi " + edge.n2 );
                 edge.endsAtPoi = poi_set[edge.n2];
               }
 
@@ -240,8 +264,8 @@ function poiPath(){
             }
           }
 
-          //console.log("poiPath_NN");
-          //console.log(poiPath_NN);
+          console.log("poiPath_NN");
+          console.log(poiPath_NN);
 
           callback(poiPath_NN);
         }
