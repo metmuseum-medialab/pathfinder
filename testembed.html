@@ -1,0 +1,361 @@
+<html>
+<head>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+
+<style>
+.searchresult .info{
+    font-size: .8em;
+    font-weight: normal;
+    font-family: sans-serif;
+    padding-bottom: 5px
+}
+.searchresult .object{
+}
+.searchresult .image > img {
+    width: 75px;
+    padding-bottom: 5px;
+}
+
+.unfortunateMessages  { 
+    font-color: red;
+    color: red;
+    padding: 2px;
+}
+
+.waypoint_list > img {
+    width: 75px;    
+}
+
+</style>
+
+	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/raphael-min.js"></script>
+
+	<script src="http://66.175.215.36/pathfinder/js/pathfinder.jquery.js"></script>
+
+	<script> 
+	$( document ).ready(function() {
+		var embed1 = $("#embed_map_here").metPathfinder({name : "embed1"}).data("metPathfinder");
+
+		$("#embed_map_here").bind("poi_added", function(options){
+			console.log("poi_added");
+			drawWaypoints();
+		});
+		$("#embed_map_here").bind("poi_deleted", function(options){
+			console.log("poi_deleted");
+		});
+
+		$("#clicktest").click(function(){
+			console.log("trying clicktest");
+			embed1.pathIt();
+		});
+
+        $("#embed_map_here").bind("unfortunate", function(args){
+            console.log("unfortunate");
+            console.log(args);
+            $("#unfortunateMessages").modal();
+            $(".modal-content", "#unfortunateMessages").text("Sorry! " + args.message);
+        });
+
+        eve.on("unfortunate", function(args){
+            console.log("unfortunate");
+            console.log(args);
+            $("#unfortunateMessages").modal();
+            $(".modal-content", "#unfortunateMessages").text("Sorry! " + args.message);
+        });
+
+
+		embed1.setupMap();
+
+        function clearWaypoints(){
+            eve("clear.waypoints");
+            startNodeId = false;
+        }
+
+
+        function drawWaypoints(){
+            //iterate through poi_set
+            $(".waypoints.dropdown > .dropdown-menu").empty();
+            console.log(embed1.options.poi_set);
+            $(".waypoints_count").text(Object.keys(embed1.options.poi_set).length);
+            $.each(embed1.options.poi_set, function(index, poi){
+                (function(_poi, _index){
+                    var listitem = $("<li class='waypoint_list'/>");
+                    var objectitem = $("");
+                    if(_poi.objectinfo){
+                        objectitem = $("<img src='"+_poi.objectinfo.image_thumb+"' />")
+                    }
+                    var startelem = $("<BR><span><span>");
+                    console.log(embed1.options.startNodeId + " : " + _index);
+                    if(_index == embed1.options.startNodeId){
+                        $(startelem).text("start");
+                    }else{
+                        $(startelem).text("start here instead");
+                        $(startelem).click(function(){
+                        	embed1.setStartNode(_index);
+                            drawWaypoints();
+                        });
+                    }
+
+
+
+                    var textitem = $("<a href='#'>Gallery "+poi.galnum+"</a>");
+                    var removeitem = $("<b>remove</b>").click(function(){
+                            // remove
+                            if(embed1.options.poi_set[_index].elem){
+                                embed1.options.poi_set[_index].elem.attr("fill", "black");
+                            }
+                            delete embed1.options.poi_set[_index];
+                            if(embed1.options.startNodeId == _index){
+                                console.log("removed a start item");
+                                embed1.options.startNodeId = false;
+                                if(Object.keys(embed1.options.poi_set).length > 0){
+                                    console.log("setting to another");
+                                    console.log(Object.keys(embed1.options.poi_set)[0]);
+                                    // pick another point as the start.
+                                    embed1.options.poi_set[Object.keys(embed1.options.poi_set)[0]].type = "start";
+                                    console.log(poi_set[Object.keys(embed1.options.poi_set)[0]]);
+                                    startNodeId = Object.keys(embed1.options.poi_set)[0];
+                                }
+                            }
+                            console.log("redrawing");
+                            drawWaypoints();
+                        });
+
+                    $(".waypoints.dropdown > .dropdown-menu").append(listitem);
+                    $(listitem).append(objectitem);
+                    $(listitem).append(textitem);
+                    $(listitem).append(removeitem);
+                    $(listitem).append(startelem);
+                    $(listitem).append("<hr/>");
+
+                    eve.on("clear.waypoints", function(){
+                        delete embed1.options.poi_set[_index];
+                        drawWaypoints();
+                    });
+                })(poi, index);
+            });
+        }
+
+
+        // search menu setup
+        // poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum};
+        $(".search > input").keyup(function(evt){
+            var term = $(".form-group.search > input").val();
+            
+            embed1.objectSearch(term, 
+            	function(results, status){
+	                console.log(results);
+//	                var results = JSON.parse(results);
+	                console.log(results);
+	                $("#searchresults").empty();
+	                $(".dropdown-menu.search").dropdown("toggle");
+	                $(".dropdown-menu.search").show();
+
+
+	                $.each(results.collection.items, function(index, item){
+	                    if(item.gallery.toString().match(/not on view/i)){
+	                        return true;
+	                    }
+
+	                    var itemelem = $("<div class='container-fluid'/>").appendTo("#searchresults");
+	                    var objectdiv = $("<div class='searchresult object row' />").appendTo(itemelem);
+	                    var imagediv = $("<div class='searchresult image col-sm-4'  />").appendTo(objectdiv);
+	                    var infodiv = $("<div class='searchresult info col-sm-8'  />").appendTo(objectdiv);
+	                    $(imagediv).append("<img src='"+item.image_thumb+"'/>");
+	                    var title = item.title;
+	                    if(title.length > 30){
+	                        title = title.substring(0,25) + "...";
+	                    }
+	                    
+	                    $(infodiv).append(title+"<br/>");
+	                    $(infodiv).append(item.accessionNumber+"<br/>");
+	                    $(infodiv).append(item.primaryArtistNameOnly+"<br/>");
+	                    $(infodiv).append("Gallery: <span class='galnum'>" +item.gallery+"</span><br/>");
+	                    
+	                    $(itemelem).click(function(){
+	                        var galnum = $(".galnum", this).text();
+	                        console.log(galnum);
+	                        console.log("clicked");
+	                        $(".dropdown-menu.search").hide();
+	                        
+	                        if(!galnum.match(/not on view/i)){
+	                            // get graph node info
+
+	                            embed1.getGalleryNode(galnum, 
+	                            	function(results2, status2){
+		                                console.log(results2);
+		                                if(results2.result == "bad"){
+		                                    // don't add to the list, send out an error message
+		                                    eve("unfortunate", item, {message : "that object isn't in a known gallery"});
+		                                    return;
+		                                }
+		                                if (embed1.options.startNode == true) {
+		                                    console.log("setting start node t0 " + results2.id )
+		                                    results2.type = "start";
+		                                    startNode = false;
+		                                    startNodeId = results2.id;
+		                                } else {
+		                                    results2.type = "poi";
+		                                }
+		                                results2.objectinfo = item;
+		                                embed1.options.poi_set[results2.id] = results2;
+		                                drawWaypoints();
+
+		                            },
+		                            function(jqXHR, status, message){
+										console.log("scrapi search ajax error ");
+										console.log(status);
+										console.log(message);
+		                            }
+	                            );
+	                        }
+	                        
+	                    });
+	                });
+	            },
+	            function(jqXHR, status, message){
+					console.log("scrapi search ajax error ");
+					console.log(status);
+					console.log(message);
+	            }
+			);         
+			 
+        });
+
+
+        $(".btn.pathit").click(function(){
+            console.log("pathing it");
+            embed1.pathIt();
+            return false;
+        });
+
+        $(".btn.clearpath").click(function(){
+            console.log("clearing it");
+            embed1.clearPath();
+            clearWaypoints();
+            return false;
+        });
+
+
+        // Drop down menues for access pref user input
+
+
+        $("<li><a href='#'>"+embed1.options.userPrefsText['light'][1]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.light = 1;
+            $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][1]);
+        });
+        $("<li><a href='#'>"+embed1.options.userPrefsText['light'][2]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.light = 2;
+            $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][2]);
+        });
+        $("<li><a href='#'>"+embed1.options.userPrefsText['light'][0]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.light = 0;
+            $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][0]);
+        });
+        $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][embed1.options.userPrefs.light]);
+
+
+        $("<li><a href='#'>"+embed1.options.userPrefsText['crowd'][1]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.crowd = 1;
+            $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][1]);
+        });
+        $("<li><a href='#'>"+embed1.options.userPrefsText['crowd'][2]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.crowd = 2;
+            $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][2]);
+        });
+        $("<li><a href='#'>"+embed1.options.userPrefsText['crowd'][0]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.crowd = 0;
+            $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][0]);
+        });
+        $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][embed1.options.userPrefs.crowd]);
+
+        $("<li><a href='#'>"+embed1.options.userPrefsText['noise'][1]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.noise = 1;
+            $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][1]);
+        });
+        $("<li><a href='#'>"+embed1.options.userPrefsText['noise'][2]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.noise = 2;
+            $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][2]);
+        });
+        $("<li><a href='#'>"+embed1.options.userPrefsText['noise'][0]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.noise = 0;
+            $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][0]);
+        });
+        $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][embed1.options.userPrefs.noise]);
+
+		/*
+		$("#embed_map_here_2").pathfinder.init();
+*/ 
+	});
+	</script>
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Accessible Wayfinder MVP3</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">   
+                <li class="dropdown lightlevel">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Light Level: <span class="prefvalue"></span><span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                    </ul>
+                </li>
+                <li class="dropdown crowdlevel">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Crowd Level: <span class="prefvalue"></span><span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                    </ul>
+                </li>
+                <li class="dropdown noiselevel">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Noise Level: <span class="prefvalue"></span><span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                    </ul>
+                </li>
+  
+                <li class="dropdown waypoints">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Waypoints <span class="waypoints_count"></span><span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                    </ul>
+                </li>
+                <li class="dropdown search">
+
+                    <form class="navbar-form navbar-left" role="search">
+                      <div class="form-group search">
+                        <input type="text" class="form-control" id="search_entry" placeholder="Search Gallery or Object">
+                      </div>
+                      <ul class="dropdown-menu search" id="searchresults" role="menu"></ul>                      
+                      <button type="submit" class="pathit btn btn-default">Path it!</button>
+                      <button type="submit" class="clearpath btn btn-default">Clear</button>
+                    </form>
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+</nav>
+</div>
+<div class="row-constant" id="mapmetadata">
+    <div class="span12" id="embed_map_here" ></div>
+</div>  
+<div id="unfortunateMessages" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="unfortunateMessages modal-content">
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>
