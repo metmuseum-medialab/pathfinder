@@ -164,6 +164,7 @@ function dijkstra(){
         });   
     
         // Assign  initial weight  (0 - Infinity) and visited (true/false) value to nodes
+        console.log("setting up all nodes " + startPoint);
         $.each(graph.nodes, function(index, node){
 
           if (index == startPoint) {
@@ -174,18 +175,20 @@ function dijkstra(){
           curNode = startPoint;
           node.visited = false; 
         });
-          
+
         function dijkstra() {
             
           // find node with the smallest weight
           var minWeight = Infinity;
+          var minWeightNode = false;
 
           $.each(graph.nodes, function(index, node){ 
-            if(node.visited == false) {
-              if (minWeight > node.weight) {
+            if(!node.visited || node.visited == false) {
+              if (minWeight >= node.weight) {
                   minWeight = node.weight;
                   minWeightNode = index;
-              }       
+              }else{
+              }    
             }
           });
 

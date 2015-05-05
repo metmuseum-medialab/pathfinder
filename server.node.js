@@ -131,6 +131,19 @@ function reconcile_pois(dataFilename, poi_set, callback){
   // do a pass over teh submitted POIs. some might just be gallery numbers, or objects
   var poi_problems = [];
   var poi_count = 0;
+
+  var fix_poi_ids = function(poi_set){
+    var new_poi_set = {};
+    $.each(poi_set, function(index, poi){
+      if(poi.object_reconciled || poi.gallery_reconciled){
+        new_poi_set[poi.id] = poi;
+      }else{
+        new_poi_set[index] = poi;
+      }
+    });
+    return new_poi_set;
+  }
+
   $.each(poi_set, function(index, poi){
     console.log("checking " + index);
     // if there's just an objectID, get the gallery, then the node data
@@ -148,9 +161,8 @@ function reconcile_pois(dataFilename, poi_set, callback){
             objectdata.image_thumb = objectdata.currentImage.imageUrl.replace(/-large/, "-thumb");
             objectdata.href= "http://www.scrapi.org/object/"+crdid;
             objectdata.website_href= "http://www.metmuseum.org/collection/the-collection-online/search/"+crdid;
-            console.log(objectdata);
-            if(!objectdata.gallery.match(/not on view/i)){
-              poi.objectinfo = objectdata;
+            if(!objectdata.gallery.toString().match(/not on view/i)){
+           //   poi.objectinfo = objectdata;
               poi.galnum = objectdata.gallery;
               reconcile_poi_galnum(dataFilename,poi, poi_problems);
             }else{
@@ -166,26 +178,37 @@ function reconcile_pois(dataFilename, poi_set, callback){
           poi.object_reconciled = true; 
           poi_count++;
           if(poi_count == Object.keys(poi_set).length){
+            console.log("all entries checked 2");
+            poi_set = fix_poi_ids(poi_set);
+            console.log(poi_set);
             callback(poi_set, poi_problems);
           }else{
             console.log("count " + poi_count + " not to " + Object.keys(poi_set).length);
           }
         });
-      }else if (poi.galnum){
+      }else if (poi.galnum){     // if there's just a gallery number, get the node data from the graph  
         reconcile_poi_galnum(dataFilename, poi, poi_problems);
         poi_count++;
         if(poi_count == Object.keys(poi_set).length){
+          console.log("all entries checked 1");
+          console.log(poi_set);
+          poi_set = fix_poi_ids(poi_set);
           callback(poi_set, poi_problems);
         }else{
-            console.log("count " + poi_count + " not to " + Object.keys(poi_set).length);
+          console.log("count " + poi_count + " not to " + Object.keys(poi_set).length);
         }
 
       }
-    // if there's just a gallery number, get the node data from the graph  
     }else{
+      // already has the data, but add an id attribute
+      poi.id = index;
       poi.object_reconciled = true; 
       poi_count++;
       if(poi_count == Object.keys(poi_set).length){
+        console.log("all entries checked 3");
+        console.log(poi_set);
+        poi_set = fix_poi_ids(poi_set);
+
         callback(poi_set, poi_problems);
       }else{
         console.log("count " + poi_count + " not to " + Object.keys(poi_set).length);
