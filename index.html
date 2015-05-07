@@ -1,11 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="utf-8" />
-    <title>Met Wayfinding Beta</title>
-
-    <div id="placeholder"></div>
-    <!-- <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script> -->
     <link href="css/bootstrap-responsive.css" rel="stylesheet">
     <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
 
@@ -34,236 +28,70 @@
 }
 
 </style>
-    <script src="js/jquery-1.11.0.min.js"></script>
-
-    <script src="js/bootstrap.min.js"></script>
-
+ 
+	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
-
+    <script src="js/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/raphael-min.js"></script>
-    <script language='javascript'>
-        $( document ).ready(function() {
 
-            var userPrefs = {light: 0, crowd: 0, noise: 0};
+	<script src="http://66.175.215.36/pathfinder/js/pathfinder.jquery.js"></script>
 
-            var userPrefsText = {
-                light : {
-                    0 : "Don't Care",
-                    1 : "Bright",
-                    2 : "Subdued"
-                },
-                crowd : {
-                    0 : "Don't Care",
-                    1 : "Lively",
-                    2 : "Uncrowded"
-                },
-                noise : {
-                    0 : "Don't Care",
-                    1 : "Loud",
-                    2 : "Quiet"
-                }
-            }
+	<script> 
+	$( document ).ready(function() {
+		var embed1 = $("#embed_map_here").metPathfinder({name : "embed1"}).data("metPathfinder");
 
-
-            eve.on("unfortunate", function(args){
-                console.log("unfortunate");
-                console.log(args);
-                $("#unfortunateMessages").modal();
-                $(".modal-content", "#unfortunateMessages").text("Sorry! " + args.message);
-            });
-
-           // map vars 
-            var map_image_url = "images/MuseumMapFullAug2014.jpg";
-
-            var imgScale = .3;
-            var vertShift = 0;
-
-            // floor 1
-            /*
-            var map_srcWidth = 3214; 
-            var map_srcHeight = 2142; 
-            */
-            var map_srcWidth = 2750; 
-            var map_srcHeight = 4125; 
-            var map_width = map_srcWidth * imgScale;
-            var map_height = map_srcHeight * imgScale;
-
-            var paper; // "canvas"
-            var startNode = true;
-            var startNodeId = false;
-
-            var poi_set = {};
-
-            $("#mapelem").height(map_height+vertShift).width(map_width);
-
-            Raphael("mapelem", map_width, map_height+vertShift, function(
-                text){
-                
-                paper = this; //this is valid within this functiom
-                
-                var map_paperImg = paper.image(map_image_url, 0,vertShift, map_width, map_height);
-                    
-                // Draw circles that a user can click on to choose start and end point
-                $.getJSON('data/all_floors.json ', function(graph) {
-                    console.log("got data");
-                    console.log(graph);
-                    $.each(graph.nodes, function(index, node) {
-
-                        if (node.nodetype == "gallery") { 
-                            
-                            poi_set = {};
-
-                            var txtClicked = false;
-
-                            var txtDraw = paper.text(node.x, node.y+vertShift, node.galnum);
-                            
-                            // gallery numbers
-                            txtDraw.id = index;
-                            txtDraw.attr("fill", "black");
-                            txtDraw.attr("fill-opacity",.5);
-                            txtDraw.attr("font-size", 10);
-
-                            // text event properties
-                            txtDraw.click(function(evt){
-
-                                var poi_id = this.id;
-                                var nodeType;
-
-                                //console.log(graph.nodes[this.id]);
-                                if (txtClicked == false) {
-
-                                    if (startNode == true) {
-                                        nodeType = "start";
-                                        startNode = false;
-                                        startNodeId = poi_id;
-                                    } else {
-                                        nodeType = "poi";
-                                    }
-
-                                    this.attr("fill", "red");
-                                    txtClicked = true;
-                                    poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum, elem: this};
-                                    drawWaypoints();
-                                    
-                                    console.log(node);
-                                } else {
-                                    this.attr("fill", "black");
-                                    txtClicked = false;
-                                    delete poi_set[poi_id];
-                                }
-                                (function(_poi_id, _point){
-                                    eve.on("clear.waypoints", function(){
-                                        _point.attr("fill", "black");
-                                        txtClicked = false;
-                                        delete poi_set[_poi_id];
-                                    }); 
-                                })(poi_id, this);
-                            });
-                            
-                            txtDraw.mouseover(function(evt){
-                                if (txtClicked == false) {
-                                    this.attr("fill-opacity", 1);
-                                }
-                            });
-
-                            txtDraw.mouseout(function(evt){
-                                if (txtClicked == false) {
-                                    this.attr("fill-opacity", .5);
-                                }
-                            });
-                        }
-                    });
-                });
-
-            });
+        
+        embed1.setupMap(function(){
             
+            embed1.options.poi_set[0] =  {galnum: "356", type : "start"};
+            embed1.options.poi_set[1] =  {galnum: "350", type : "poi"};
+            embed1.options.poi_set[2] =  {galnum: "162", type : "poi"};
+           embed1.options.poi_set[3] =  {galnum: "353", type : "poi"};
+//            embed1.options.poi_set[1] = {objectinfo : {id :  '23026'}, type : "poi"};
+            embed1.pathIt();     
+            
+        });
+        
 
-            function pathIt(){
-                var poiData = JSON.stringify(poi_set);
-                var prefData = JSON.stringify(userPrefs);
-                var thedata = {poi: poiData, prefs: prefData};
-                console.log(thedata);
-                //console.log(poiData);
-                $.ajax({
-                    url : "?action=poiPath" ,
-                    data : {poi: poiData, prefs: prefData},
-                    //type : "PUT",
-                    contentType : 'json',
-                    // processData : false,
-                    success : function(poiPath, status){
-                        console.log("Received poiPath data from server!!!");
-                        console.log(poiPath);
-                        drawPath(poi_set, poiPath);
-                    },
 
-                    error : function(jqXHR, status, message){
-                        console.log("poiPath ajax error (index_mvp3.html)");
-                        console.log(status);
-                        console.log(message);
-                    }
-                });   
-            }
 
-            function clearPath(){
-                eve("clear.path");
-            }
-            function clearWaypoints(){
-                eve("clear.waypoints");
-                startNodeId = false;
-            }
+		$("#embed_map_here").bind("poi_added", function(options){
+			console.log("poi_added");
+			renderWaypointsList();
+		});
+		$("#embed_map_here").bind("poi_deleted", function(options){
+			console.log("poi_deleted");
+            renderWaypointsList();
+		});
 
-            function drawPath(poi_set, poiPath) {
-                console.log("About to draw the path!")
+        $("#embed_map_here").bind("unfortunate", function(args){
+            console.log("unfortunate");
+            console.log(args);
+            $("#unfortunateMessages").modal();
+            $(".modal-content", "#unfortunateMessages").text("Sorry! " + args.message);
+        });
 
-                clearPath();
-                // make circles
-                /*$.each(poi_set, function(index, node) {
-                    var circle = paper.circle(node.x, node.y, 5);
+        eve.on("unfortunate", function(args){
+            console.log("unfortunate");
+            console.log(args);
+            $("#unfortunateMessages").modal();
+            $(".modal-content", "#unfortunateMessages").text("Sorry! " + args.message);
+        });
 
-                        circle.id  = node;
-                        //circle.attr("stroke","black");
-                        //circle.attr("stroke-width",0);
-                        //circle.attr("fill", "blue");
-                        //circle.attr("fill-opacity",".5");
-                });*/
-                // highlight path
+        function clearWaypoints(){
+            eve("clear.waypoints");
+            startNodeId = false;
+        }
 
-                // make lines
-                $.each(poiPath, function(index, path) {
-                    $.each(path, function(index, edge) {
-                        var pathString = "M"+edge.sx+","+edge.sy+"L"+edge.ex+","+edge.ey;
-                        var line = paper.path(pathString);
-                        line.attr("stroke","black");
-                        line.attr("stroke-width",2);
-                        (function(_line){
-                            console.log("attaching");
-                            eve.on("clear.path", function(){
-                                console.log("clear line");
-                                _line.remove();
-                            })
-                        })(line);
-                        // number the points
-                        var halfx = (edge.sx + edge.ex) / 2;
-                        var halfy = (edge.sy + edge.ey) / 2 ;
-                        var ident = paper.text(halfx, halfy, index);
-                        ident.attr("fill", "red");
-                        ident.attr("fill-opacity",.5);
-                        ident.attr("font-size", 20);
-                        (function(_ident){
-                            eve.on("clear.path", function(){
-                                _ident.remove();
-                            })
-                        })(ident);
-                    });
-                });
-            } 
 
-        function drawWaypoints(){
+
+
+        function renderWaypointsList(){
             //iterate through poi_set
             $(".waypoints.dropdown > .dropdown-menu").empty();
-            console.log(poi_set);
-            $(".waypoints_count").text(Object.keys(poi_set).length);
-            $.each(poi_set, function(index, poi){
+            console.log(embed1.options.poi_set);
+            $(".waypoints_count").text(Object.keys(embed1.options.poi_set).length);
+            $.each(embed1.options.poi_set, function(index, poi){
                 (function(_poi, _index){
                     var listitem = $("<li class='waypoint_list'/>");
                     var objectitem = $("");
@@ -271,45 +99,38 @@
                         objectitem = $("<img src='"+_poi.objectinfo.image_thumb+"' />")
                     }
                     var startelem = $("<BR><span><span>");
-                    console.log(startNodeId + " : " + _index);
-                    if(_index == startNodeId){
+                    console.log(embed1.options.startNodeId + " : " + _index);
+                    if(_index == embed1.options.startNodeId){
                         $(startelem).text("start");
                     }else{
                         $(startelem).text("start here instead");
                         $(startelem).click(function(){
-                            console.log("start node id is" + startNodeId);
-                            console.log(poi_set);
-                            console.log(poi_set[startNodeId]);
-                            poi_set[startNodeId].type = "poi";
-                            startNodeId = _index;
-                            poi_set[startNodeId].type = "start";
-                            drawWaypoints();
+                        	embed1.setStartNode(_index);
+                            renderWaypointsList();
                         });
                     }
-
-
 
                     var textitem = $("<a href='#'>Gallery "+poi.galnum+"</a>");
                     var removeitem = $("<b>remove</b>").click(function(){
                             // remove
-                            if(poi_set[_index].elem){
-                                poi_set[_index].elem.attr("fill", "black");
+                            if(embed1.options.poi_set[_index].elem){
+                                embed1.options.poi_set[_index].elem.attr("fill", "black");
                             }
-                            delete poi_set[_index];
-                            if(startNodeId == _index){
+                            delete embed1.options.poi_set[_index];
+                            if(embed1.options.startNodeId == _index){
                                 console.log("removed a start item");
-                                startNodeId = false;
-                                if(Object.keys(poi_set).length > 0){
+                                embed1.options.startNodeId = false;
+                                if(Object.keys(embed1.options.poi_set).length > 0){
                                     console.log("setting to another");
-                                    console.log(Object.keys(poi_set)[0]);
+                                    console.log(Object.keys(embed1.options.poi_set)[0]);
                                     // pick another point as the start.
-                                    poi_set[Object.keys(poi_set)[0]].type = "start";
-                                    console.log(poi_set[Object.keys(poi_set)[0]]);
-                                    startNodeId = Object.keys(poi_set)[0];
+                                    embed1.options.poi_set[Object.keys(embed1.options.poi_set)[0]].type = "start";
+                                    console.log(poi_set[Object.keys(embed1.options.poi_set)[0]]);
+                                    startNodeId = Object.keys(embed1.options.poi_set)[0];
                                 }
                             }
                             console.log("redrawing");
-                            drawWaypoints();
+                            renderWaypointsList();
                         });
 
                     $(".waypoints.dropdown > .dropdown-menu").append(listitem);
@@ -320,164 +141,164 @@
                     $(listitem).append("<hr/>");
 
                     eve.on("clear.waypoints", function(){
-                        delete poi_set[_index];
-                        drawWaypoints();
+                        delete embed1.options.poi_set[_index];
+                        renderWaypointsList();
                     });
                 })(poi, index);
             });
         }
 
 
+        // search menu setup
+        // poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum};
+        $(".search > input").keyup(function(evt){
+            var term = $(".form-group.search > input").val();
+            
+            embed1.objectSearch(term, 
+            	function(results, status){
+	                console.log(results);
+//	                var results = JSON.parse(results);
+	                console.log(results);
+	                $("#searchresults").empty();
+	                $(".dropdown-menu.search").dropdown("toggle");
+	                $(".dropdown-menu.search").show();
+
+
+	                $.each(results.collection.items, function(index, item){
+	                    if(item.gallery.toString().match(/not on view/i)){
+	                        return true;
+	                    }
+
+	                    var itemelem = $("<div class='container-fluid'/>").appendTo("#searchresults");
+	                    var objectdiv = $("<div class='searchresult object row' />").appendTo(itemelem);
+	                    var imagediv = $("<div class='searchresult image col-sm-4'  />").appendTo(objectdiv);
+	                    var infodiv = $("<div class='searchresult info col-sm-8'  />").appendTo(objectdiv);
+	                    $(imagediv).append("<img src='"+item.image_thumb+"'/>");
+	                    var title = item.title;
+	                    if(title.length > 30){
+	                        title = title.substring(0,25) + "...";
+	                    }
+	                    
+	                    $(infodiv).append(title+"<br/>");
+	                    $(infodiv).append(item.accessionNumber+"<br/>");
+	                    $(infodiv).append(item.primaryArtistNameOnly+"<br/>");
+	                    $(infodiv).append("Gallery: <span class='galnum'>" +item.gallery+"</span><br/>");
+	                    
+	                    $(itemelem).click(function(){
+	                        var galnum = $(".galnum", this).text();
+	                        console.log(galnum);
+	                        console.log("clicked");
+	                        $(".dropdown-menu.search").hide();
+	                        
+	                        if(!galnum.match(/not on view/i)){
+	                            // get graph node info
+
+	                            embed1.getGalleryNode(galnum, 
+	                            	function(results2, status2){
+		                                console.log(results2);
+		                                if(results2.result == "bad"){
+		                                    // don't add to the list, send out an error message
+		                                    eve("unfortunate", item, {message : "that object isn't in a known gallery"});
+		                                    return;
+		                                }
+		                                if (embed1.options.startNode == true) {
+		                                    console.log("setting start node t0 " + results2.id )
+		                                    results2.type = "start";
+		                                    startNode = false;
+		                                    startNodeId = results2.id;
+		                                } else {
+		                                    results2.type = "poi";
+		                                }
+		                                results2.objectinfo = item;
+		                                embed1.options.poi_set[results2.id] = results2;
+		                                renderWaypointsList();
+
+		                            },
+		                            function(jqXHR, status, message){
+										console.log("scrapi search ajax error ");
+										console.log(status);
+										console.log(message);
+		                            }
+	                            );
+	                        }	                        
+	                    });
+	                });
+	            },
+	            function(jqXHR, status, message){
+					console.log("scrapi search ajax error ");
+					console.log(status);
+					console.log(message);
+	            }
+			);         
+			 
+        });
+
+
         $(".btn.pathit").click(function(){
             console.log("pathing it");
-            pathIt();
+            embed1.pathIt();
             return false;
         });
 
         $(".btn.clearpath").click(function(){
             console.log("clearing it");
-            clearPath();
+            embed1.clearPath();
             clearWaypoints();
             return false;
         });
-
-        // search menu setup
-        // poi_set[poi_id] = {x: node.x, y: node.y, type: nodeType, galnum: node.galnum};
-        $(".search > input").keyup(function(evt){
-            var term = $(".form-group.search > input").val();
-            $.ajax({
-                url : "?action=search&term="+encodeURIComponent(term),
-                data : {term: term, graphName: "all_floors.json"},
-                //type : "PUT",
-                contentType : 'json',
-                // processData : false,
-                success : function(results, status){
-                    console.log(results);
-                    var results = JSON.parse(results);
-                    console.log(results);
-                    $("#searchresults").empty();
-                    $(".dropdown-menu.search").dropdown("toggle");
-                            $(".dropdown-menu.search").show();
-
-                    $.each(results.collection.items, function(index, item){
-                        if(item.gallery.toString().match(/not on view/i)){
-                            return true;
-                        }
-
-                        var itemelem = $("<div class='container-fluid'/>").appendTo("#searchresults");
-                        var objectdiv = $("<div class='searchresult object row' />").appendTo(itemelem);
-                        var imagediv = $("<div class='searchresult image col-sm-4'  />").appendTo(objectdiv);
-                        var infodiv = $("<div class='searchresult info col-sm-8'  />").appendTo(objectdiv);
-                        $(imagediv).append("<img src='"+item.image_thumb+"'/>");
-                        var title = item.title;
-                        if(title.length > 30){
-                            title = title.substring(0,25) + "...";
-                        }
-                        $(infodiv).append(title+"<br/>");
-                        $(infodiv).append(item.accession_number+"<br/>");
-                        $(infodiv).append(item.artist+"<br/>");
-                        $(infodiv).append("Gallery: <span class='galnum'>" +item.gallery+"</span><br/>");
-                        $(itemelem).click(function(){
-                            var galnum = $(".galnum", this).text();
-                            console.log(galnum);
-                            console.log("clicked");
-                            $(".dropdown-menu.search").hide();
-                            if(!galnum.match(/not on view/i)){
-                                // get graph node info
-                                var url = "?action=getgallerynode&graphName=all_floors.json&gallerynumber="+encodeURIComponent(galnum);
-                                
-                                $.ajax({
-                                    url: url,
-                                    contentType : 'json',
-                                    // processData : false,
-                                    success : function(results2, status){
-                                        console.log(results2);
-                                        if(results2.result == "bad"){
-                                            // don't add to the list, send out an error message
-                                            eve("unfortunate", item, {message : "that object isn't in a known gallery"});
-                                            return;
-                                        }
-                                        if (startNode == true) {
-                                            console.log("setting start node t0 " + results2.id )
-                                            results2.type = "start";
-                                            startNode = false;
-                                            startNodeId = results2.id;
-                                        } else {
-                                            results2.type = "poi";
-                                        }
-                                        results2.objectinfo = item;
-                                        poi_set[results2.id] = results2;
-                                        drawWaypoints();
-                                    },
-                                    error : function(jqXHR, status, message){
-                                        console.log("scrapi search ajax error ");
-                                        console.log(status);
-                                        console.log(message);
-                                    }
-                                });
-
-                            }
-                        });
-                    });
-                },
-
-                error : function(jqXHR, status, message){
-                    console.log("scarpi search ajax error ");
-                    console.log(status);
-                    console.log(message);
-                }
-            });   
-        });
-
 
 
         // Drop down menues for access pref user input
 
 
-        $("<li><a href='#'>"+userPrefsText['light'][1]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
-            userPrefs.light = 1;
-            $(".lightlevel.dropdown > a > .prefvalue").text(userPrefsText['light'][1]);
+        $("<li><a href='#'>"+embed1.options.userPrefsText['light'][1]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.light = 1;
+            $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][1]);
         });
-        $("<li><a href='#'>"+userPrefsText['light'][2]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
-            userPrefs.light = 2;
-            $(".lightlevel.dropdown > a > .prefvalue").text(userPrefsText['light'][2]);
+        $("<li><a href='#'>"+embed1.options.userPrefsText['light'][2]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.light = 2;
+            $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][2]);
         });
-        $("<li><a href='#'>"+userPrefsText['light'][0]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
-            userPrefs.light = 0;
-            $(".lightlevel.dropdown > a > .prefvalue").text(userPrefsText['light'][0]);
+        $("<li><a href='#'>"+embed1.options.userPrefsText['light'][0]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.light = 0;
+            $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][0]);
         });
-        $(".lightlevel.dropdown > a > .prefvalue").text(userPrefsText['light'][userPrefs.light]);
+        $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][embed1.options.userPrefs.light]);
 
 
-        $("<li><a href='#'>"+userPrefsText['crowd'][1]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
-            userPrefs.crowd = 1;
-            $(".crowdlevel.dropdown > a > .prefvalue").text(userPrefsText['crowd'][1]);
+        $("<li><a href='#'>"+embed1.options.userPrefsText['crowd'][1]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.crowd = 1;
+            $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][1]);
         });
-        $("<li><a href='#'>"+userPrefsText['crowd'][2]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
-            userPrefs.crowd = 2;
-            $(".crowdlevel.dropdown > a > .prefvalue").text(userPrefsText['crowd'][2]);
+        $("<li><a href='#'>"+embed1.options.userPrefsText['crowd'][2]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.crowd = 2;
+            $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][2]);
         });
-        $("<li><a href='#'>"+userPrefsText['crowd'][0]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
-            userPrefs.crowd = 0;
-            $(".crowdlevel.dropdown > a > .prefvalue").text(userPrefsText['crowd'][0]);
+        $("<li><a href='#'>"+embed1.options.userPrefsText['crowd'][0]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.crowd = 0;
+            $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][0]);
         });
-        $(".crowdlevel.dropdown > a > .prefvalue").text(userPrefsText['crowd'][userPrefs.crowd]);
+        $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][embed1.options.userPrefs.crowd]);
 
-        $("<li><a href='#'>"+userPrefsText['noise'][1]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
-            userPrefs.noise = 1;
-            $(".noiselevel.dropdown > a > .prefvalue").text(userPrefsText['noise'][1]);
+        $("<li><a href='#'>"+embed1.options.userPrefsText['noise'][1]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.noise = 1;
+            $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][1]);
         });
-        $("<li><a href='#'>"+userPrefsText['noise'][2]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
-            userPrefs.noise = 2;
-            $(".noiselevel.dropdown > a > .prefvalue").text(userPrefsText['noise'][2]);
+        $("<li><a href='#'>"+embed1.options.userPrefsText['noise'][2]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.noise = 2;
+            $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][2]);
         });
-        $("<li><a href='#'>"+userPrefsText['noise'][0]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
-            userPrefs.noise = 0;
-            $(".noiselevel.dropdown > a > .prefvalue").text(userPrefsText['noise'][0]);
+        $("<li><a href='#'>"+embed1.options.userPrefsText['noise'][0]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
+            embed1.options.userPrefs.noise = 0;
+            $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][0]);
         });
-        $(".noiselevel.dropdown > a > .prefvalue").text(userPrefsText['noise'][userPrefs.noise]);
-    });
-   </script>
+        $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][embed1.options.userPrefs.noise]);
+
+		/*
+		$("#embed_map_here_2").pathfinder.init();
+*/ 
+	});
+	</script>
 </head>
 <body>
 <nav class="navbar navbar-default" role="navigation">
@@ -534,13 +355,14 @@
 </nav>
 </div>
 <div class="row-constant" id="mapmetadata">
-    <div class="span12" id="mapelem" ></div>
+    <div class="span12" id="embed_map_here" ></div>
 </div>  
 <div id="unfortunateMessages" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-sm">
     <div class="unfortunateMessages modal-content">
     </div>
   </div>
+</div>
 </div>
 </body>
 </html>
