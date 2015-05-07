@@ -12,6 +12,10 @@
 }
 .searchresult .object{
 }
+
+#mapmetadata{
+    margin-top: 45px;
+}
 .searchresult .image > img {
     width: 75px;
     padding-bottom: 5px;
@@ -43,13 +47,14 @@
         
         embed1.setupMap(function(){
             
+            /*
             embed1.options.poi_set[0] =  {galnum: "356", type : "start"};
             embed1.options.poi_set[1] =  {galnum: "350", type : "poi"};
             embed1.options.poi_set[2] =  {galnum: "162", type : "poi"};
            embed1.options.poi_set[3] =  {galnum: "353", type : "poi"};
 //            embed1.options.poi_set[1] = {objectinfo : {id :  '23026'}, type : "poi"};
             embed1.pathIt();     
-            
+            */
         });
         
 
@@ -58,10 +63,12 @@
 		$("#embed_map_here").bind("poi_added", function(options){
 			console.log("poi_added");
 			renderWaypointsList();
+            embed1.pathIt();  
 		});
 		$("#embed_map_here").bind("poi_deleted", function(options){
 			console.log("poi_deleted");
             renderWaypointsList();
+            embed1.pathIt();
 		});
 
         $("#embed_map_here").bind("unfortunate", function(args){
@@ -76,6 +83,10 @@
             console.log(args);
             $("#unfortunateMessages").modal();
             $(".modal-content", "#unfortunateMessages").text("Sorry! " + args.message);
+        });
+
+        eve.on("pathfinderui_prefsChanged", function(args){
+            embed1.pathIt();
         });
 
         function clearWaypoints(){
@@ -107,6 +118,7 @@
                         $(startelem).click(function(){
                         	embed1.setStartNode(_index);
                             renderWaypointsList();
+                            embed1.pathIt();
                         });
                     }
 
@@ -131,6 +143,7 @@
                             }
                             console.log("redrawing");
                             renderWaypointsList();
+                            embed1.pathIt();
                         });
 
                     $(".waypoints.dropdown > .dropdown-menu").append(listitem);
@@ -188,8 +201,8 @@
 	                        var galnum = $(".galnum", this).text();
 	                        console.log(galnum);
 	                        console.log("clicked");
-	                        $(".dropdown-menu.search").hide();
-	                        
+	                        $(".dropdown-menu.search").hide(); 
+	                         
 	                        if(!galnum.match(/not on view/i)){
 	                            // get graph node info
 
@@ -201,17 +214,24 @@
 		                                    eve("unfortunate", item, {message : "that object isn't in a known gallery"});
 		                                    return;
 		                                }
-		                                if (embed1.options.startNode == true) {
+                                        results2.objectinfo = item;
+                                        console.log("adding item");
+                                        embed1.options.poi_set[results2.id] = results2;  
+                                                                                 console.log(embed1.options);                                      
+		                                if (embed1.options.hasStartNode == false) {
 		                                    console.log("setting start node t0 " + results2.id )
 		                                    results2.type = "start";
-		                                    startNode = false;
+		                                    startNode = true;
+                                            embed1.options.hasStartNode = true;
 		                                    startNodeId = results2.id;
+                                            embed1.options.startNodeId = results2.id;
+                                                                                    console.log(embed1.options); 
 		                                } else {
 		                                    results2.type = "poi";
 		                                }
-		                                results2.objectinfo = item;
-		                                embed1.options.poi_set[results2.id] = results2;
+
 		                                renderWaypointsList();
+                                        embed1.pathIt();
 
 		                            },
 		                            function(jqXHR, status, message){
@@ -253,14 +273,18 @@
 
         $("<li><a href='#'>"+embed1.options.userPrefsText['light'][1]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
             embed1.options.userPrefs.light = 1;
+            eve("pathfinderui_prefsChanged");
             $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][1]);
         });
         $("<li><a href='#'>"+embed1.options.userPrefsText['light'][2]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
             embed1.options.userPrefs.light = 2;
+            eve("pathfinderui_prefsChanged");
             $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][2]);
         });
         $("<li><a href='#'>"+embed1.options.userPrefsText['light'][0]+"</a></li>").appendTo(".lightlevel.dropdown > .dropdown-menu").click(function(){
             embed1.options.userPrefs.light = 0;
+            eve("pathfinderui_prefsChanged");
+   
             $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][0]);
         });
         $(".lightlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['light'][embed1.options.userPrefs.light]);
@@ -268,28 +292,34 @@
 
         $("<li><a href='#'>"+embed1.options.userPrefsText['crowd'][1]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
             embed1.options.userPrefs.crowd = 1;
+            eve("pathfinderui_prefsChanged");  
             $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][1]);
         });
         $("<li><a href='#'>"+embed1.options.userPrefsText['crowd'][2]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
             embed1.options.userPrefs.crowd = 2;
+            eve("pathfinderui_prefsChanged");   
             $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][2]);
         });
         $("<li><a href='#'>"+embed1.options.userPrefsText['crowd'][0]+"</a></li>").appendTo(".crowdlevel.dropdown > .dropdown-menu").click(function(){
             embed1.options.userPrefs.crowd = 0;
+            eve("pathfinderui_prefsChanged");
             $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][0]);
         });
         $(".crowdlevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['crowd'][embed1.options.userPrefs.crowd]);
 
         $("<li><a href='#'>"+embed1.options.userPrefsText['noise'][1]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
             embed1.options.userPrefs.noise = 1;
+            eve("pathfinderui_prefsChanged");            
             $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][1]);
         });
         $("<li><a href='#'>"+embed1.options.userPrefsText['noise'][2]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
             embed1.options.userPrefs.noise = 2;
+            eve("pathfinderui_prefsChanged");            
             $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][2]);
         });
         $("<li><a href='#'>"+embed1.options.userPrefsText['noise'][0]+"</a></li>").appendTo(".noiselevel.dropdown > .dropdown-menu").click(function(){
             embed1.options.userPrefs.noise = 0;
+            eve("pathfinderui_prefsChanged");            
             $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][0]);
         });
         $(".noiselevel.dropdown > a > .prefvalue").text(embed1.options.userPrefsText['noise'][embed1.options.userPrefs.noise]);
@@ -301,7 +331,7 @@
 	</script>
 </head>
 <body>
-<nav class="navbar navbar-default" role="navigation">
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container-fluid">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -338,12 +368,13 @@
                 <li class="dropdown search">
 
                     <form class="navbar-form navbar-left" role="search">
+                        <button type="submit" class="clearpath btn btn-default">Clear</button>
                       <div class="form-group search">
                         <input type="text" class="form-control" id="search_entry" placeholder="Search Gallery or Object">
                       </div>
                       <ul class="dropdown-menu search" id="searchresults" role="menu"></ul>                      
-                      <button type="submit" class="pathit btn btn-default">Path it!</button>
-                      <button type="submit" class="clearpath btn btn-default">Clear</button>
+                     <!-- <button type="submit" class="pathit btn btn-default">Path it!</button>-->
+                      
                     </form>
                 </li>
 

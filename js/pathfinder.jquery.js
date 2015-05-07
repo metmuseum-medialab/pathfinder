@@ -64,9 +64,10 @@ events triggered by this module
                              //console.log(graph.nodes[this.id]);
                              if (txtClicked == false) {
 
-                                 if (realthis.options.startNode == true) {
+                                 if (realthis.options.hasStartNode == false) {
+                                  console.log("setting as start node");
                                      nodeType = "start";
-                                     realthis.options.startNode = false;
+                                     realthis.options.hasStartNode = true;
                                      realthis.options.startNodeId = poi_id;
                                  } else {
                                      nodeType = "poi";
@@ -125,6 +126,9 @@ events triggered by this module
          this.clearPath();
          console.log("pathit");
          console.log(this.options.poi_set);
+         if(Object.keys(this.options.poi_set).length == 0){
+          return;
+         }
           var poiData = JSON.stringify(this.options.poi_set);
           var prefData = JSON.stringify(this.options.userPrefs);
           var thedata = {poi: poiData, prefs: prefData};
@@ -217,14 +221,14 @@ events triggered by this module
                }
             });
 
-      };
+      }; 
 
       this.getGalleryNode = function(galleryNum, callback, errorCallback){
          var url = this.options.server_url+ "?action=getgallerynode&graphName=all_floors.json&gallerynumber="+encodeURIComponent(galleryNum);
 
          $.ajax({
             url: url,
-            contentType : 'json',
+            contentType : 'json', 
             // processData : false,
             success : function(results2, status){
                callback(results2, status);
@@ -233,7 +237,7 @@ events triggered by this module
                errorCallback(jqXHR, status, message);
             }
          });
-
+ 
       };
 
 
@@ -242,6 +246,7 @@ events triggered by this module
          this.options.poi_set[this.options.startNodeId].type = "poi";
          this.options.startNodeId = startNodeId;
          this.options.poi_set[this.options.startNodeId].type = "start";
+         this.options.hasStartNode = true;
          console.log("start node id is now" + this.options.startNodeId);
          console.log(this.options.poi_set[this.options.startNodeId]);
       };
@@ -267,7 +272,7 @@ events triggered by this module
       map_width : 0,
       map_height : 0,
       paper : false, // "canvas"
-      startNode : true,
+      hasStartNode : false,
       startNodeId : false,
       poi_set : {},
       userPrefs : {light: 0, crowd: 0, noise: 0},
