@@ -40,11 +40,9 @@
 	$( document ).ready(function() {
 		var embed1 = $("#embed_map_here").metPathfinder({name : "embed1"}).data("metPathfinder");
         embed1.setupMap(function(){
-            
-            embed1.options.poi_set[0] =  {objectinfo : {id :  '35683'}, type : "start"};
+            embed1.options.poi_set[0] =  {galnum: 352, type : "start"};
             embed1.options.poi_set[1] = {objectinfo : {id :  '23026'}, type : "poi"};
-            embed1.pathIt();    
-            
+            embed1.pathIt();     
         });
 
 
