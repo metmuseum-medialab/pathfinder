@@ -30,7 +30,7 @@ function poiPath(){
       poi_set = new_poi_set;
       console.log(poi_set);
 
-
+      var realthis = this;
 
       var userPrefs = prefs;
 
@@ -204,11 +204,9 @@ console.log("in NearestNeighbor");
               // we want all edges to be pointing in the right direction. if the n1 of this edge isn't the n2 of the previous, flip all the values
               var edgeflip = false;
               if(!edgepn2){
-                console.log("no pn2, startPoint is " + startPoint);
+//                console.log("no pn2, startPoint is " + startPoint);
               }
-              console.log("edgepn2 is " + edgepn2);
               if(edgepn2 && edge.n1 != edgepn2){
-                console.log("flipping");
                 edgeflip = true;
                 var tempvar = edge.ey;
                 edge.ey = edge.sy;
@@ -223,11 +221,9 @@ console.log("in NearestNeighbor");
               edgepn2 = edge.n2;
 
               if(index == 0){
-                console.log("setting startsAtPoi " + edge.n1 );
                 edge.startsAtPoi = poi_set[edge.n1];
               }
               if(index == poiPerm[shortestEdgeID].edges_array.length - 1){
-                console.log("setting endsAtPoi " + edge.n2 );
                 edge.endsAtPoi = poi_set[edge.n2];
               }
 
@@ -258,20 +254,67 @@ console.log("in NearestNeighbor");
             //console.log("endFunction: " + endFunction);
 
             if (endFunction == false){
-              console.log("Starting Nearest Neighbor...");
               NearestNeighbor();
-              console.log("Ending Nearest Neighbor...");
             }
           }
-
-          console.log("poiPath_NN");
-          console.log(poiPath_NN);
-
+          poiPath_NN = realthis.fixPathSegmentOrder(poiPath_NN);
           callback(poiPath_NN);
         }
       });
+    },
+
+    fixPathSegmentOrder : function(poiPath){
+      console.log("in fixPathSegmentOrder")
+      // sometimes line segments are presented in reverse order. Here's hoping we can reverse the segments as appropriate, and get the right path
+      var lastEndN2 = false;
+      var segments = [];
+      var newPoiPath = [];
+      var segment = [];
+      var reverseMeSegments = [];
+      $.each(poiPath, function(index, edge){
+        if(edge.startsAtPoi){
+          // this is the first node of a segment;
+          if(segment.length > 0){
+            segments.push(segment);
+          }
+          segment = [];
+        }
+        edge.index = index;
+        segment.push(edge);
+      });
+      segments.push(segment);
+      // iterate throught segments, confirm that end of one = start of next
+      $.each(segments, function(index, segment){
+        console.log(index);
+        if(index != 0){
+          console.log(segment[0]);
+          console.log(segments[index-1][segments[index-1].length - 1]);
+          if(segment[0].n1 != segments[index-1][segments[index-1].length - 1].n2){
+            reverseMeSegments.push(index);            
+          }
+        }
+      });
+      $.each(reverseMeSegments, function(index, segmentIndex){
+        segments[segmentIndex].reverse();
+        segments[segmentIndex][segments[segmentIndex].length-1].endsAtPoi = segments[segmentIndex][segments[segmentIndex].length-1].startsAtPoi;
+        segments[segmentIndex][0].startsAtPoi = segments[segmentIndex][0].endsAtPoi;
+        delete segments[segmentIndex][segments[segmentIndex].length-1].startsAtPoi; 
+        delete segments[segmentIndex][0].endsAtPoi;
+      });
+
+      $.each(segments, function(index, segment){
+        $.each(segment, function(index2, edge){
+          newPoiPath.push(edge);
+        });
+      });
+      return newPoiPath;
+
     }
+
   };
+
+
+
   console.log("poiPath ended...");
   return poiPathObj; 
 }

@@ -24,7 +24,7 @@ events triggered by this module
       };
       
       //Public functions
-      this.setupMap = function() {
+      this.setupMap = function(callback) {
          console.log('setting up map');           
          $(this.element).height(this.options.map_height+this.options.vertShift).width(this.options.map_width);
          var realthis = this;
@@ -110,6 +110,9 @@ events triggered by this module
                          });
                      }
                  });
+                if(callback){
+                  callback();
+                }
              });
 
 
